@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchResponse
-import java.util.UUID
 
 val logger = KotlinLogging.logger {}
 
@@ -17,9 +16,9 @@ const val MESSAGE_CONTENT = "messageContent";
 const val TRACE_ID = "traceId";
 const val SPAN_ID = "spanId";
 
-fun SqsClient.publish(msgs: List<TransferRequest>): SendMessageBatchResponse {
+fun SqsClient.publish(transactions: List<TransferRequest>): SendMessageBatchResponse {
     val startBatch = System.currentTimeMillis()
-    val entries = msgs.map { transaction ->
+    val entries = transactions.map { transaction ->
         val transactionContent = MessageAttributeValue.builder()
             .binaryValue(SdkBytes.fromByteArray(transaction.toByteArray()))
             .dataType("Binary")
@@ -28,8 +27,8 @@ fun SqsClient.publish(msgs: List<TransferRequest>): SendMessageBatchResponse {
             .messageAttributes(
                 mapOf(
                     MESSAGE_CONTENT to transactionContent,
-                    TRACE_ID to MessageAttributeValue.builder().stringValue(transaction.traceId).build(),
-                    SPAN_ID to MessageAttributeValue.builder().stringValue(transaction.spanId).build()
+                    TRACE_ID to MessageAttributeValue.builder().stringValue(transaction.traceId).dataType("string").build(),
+                    SPAN_ID to MessageAttributeValue.builder().stringValue(transaction.spanId).dataType("String").build()
                 )
             )
             .id(transaction.referenceId)

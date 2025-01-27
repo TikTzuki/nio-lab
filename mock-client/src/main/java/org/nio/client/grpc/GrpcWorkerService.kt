@@ -49,7 +49,7 @@ class GrpcWorkerService @Autowired constructor(
     ) {
         val start = System.currentTimeMillis()
         var successCount = 0
-        var failCount = 0;
+        var failCount = 0
         accountIds.toFlux()
             .bufferTimeout(ceil(accountIds.size / parallel.toDouble()).toInt(), Duration.ofMillis(1))
             .parallel(parallel)
@@ -58,9 +58,9 @@ class GrpcWorkerService @Autowired constructor(
                 stub.transferStream(accountIdsToTransferRequest(userAccountIds, transPerUser))
                     .doOnNext { response ->
                         if (response.code == 0)
-                            successCount++;
+                            successCount++
                         else
-                            failCount++;
+                            failCount++
                     }
                     .onErrorContinue { err, _ ->
                         if (err is StatusRuntimeException) {
@@ -80,9 +80,13 @@ class GrpcWorkerService @Autowired constructor(
                 Mono.just(accountIds)
                     .repeat(transPerUser.toLong())
                     .map {
-                        val traceId = genReferenceId(accountId);
+                        val refId = genReferenceId(accountId)
+                        val traceId = "trace-$refId"
+                        val spanId = "span-$refId"
                         TransferRequest.newBuilder()
                             .setTraceId(traceId)
+                            .setSpanId(spanId)
+                            .setReferenceId(refId)
                             .setUserId(accountId)
                             .setAmount("1")
                             .build()
