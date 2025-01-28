@@ -60,6 +60,7 @@ public class TransactionServiceImpl {
         var amount = new BigDecimal(request.getAmount());
         return accountRepository
             .getAccountBalance(accountId)
+            .switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
             .doOnNext(balanceAndVersion -> {
                 log.debug("Balance: {}", balanceAndVersion.balance());
                 if (balanceAndVersion.balance().compareTo(amount) < 0)
