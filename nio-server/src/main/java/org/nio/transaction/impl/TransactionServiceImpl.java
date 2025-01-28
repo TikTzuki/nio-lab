@@ -62,7 +62,7 @@ public class TransactionServiceImpl {
             .getAccountBalance(accountId)
             .doOnNext(balanceAndVersion -> {
                 log.debug("Balance: {}", balanceAndVersion.balance());
-                if (balanceAndVersion.balance().compareTo(amount) <= 0)
+                if (balanceAndVersion.balance().compareTo(amount) < 0)
                     throw new InsufficientBalance(request.getReferenceId());
             })
             .onErrorResume(e -> true, e -> {
