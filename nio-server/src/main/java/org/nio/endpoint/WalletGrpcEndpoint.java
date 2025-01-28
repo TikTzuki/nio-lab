@@ -13,16 +13,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
-import static com.nio.wallet.grpc.WalletServiceOuterClass.CloseTicketRequest;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.CloseTicketResponse;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.CreateAccountRequest;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.CreateAccountResponse;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.GetAccountByIdRequest;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.GetAccountByIdResponse;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.TransferRequest;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.TransferResponse;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.WithdrawRequest;
-import static com.nio.wallet.grpc.WalletServiceOuterClass.WithdrawResponse;
+import static com.nio.wallet.grpc.WalletServiceOuterClass.*;
 
 @Slf4j
 @GrpcService
@@ -35,40 +26,40 @@ public class WalletGrpcEndpoint extends ReactorWalletServiceGrpc.WalletServiceIm
     @Override
     public Flux<StringValue> ping(Flux<Empty> request) {
         return request.map(req -> StringValue.newBuilder()
-                        .setValue("pong")
-                        .build())
-                .timeout(Duration.ofMillis(TIMEOUT_MILLIS));
+                .setValue("pong")
+                .build())
+            .timeout(Duration.ofMillis(TIMEOUT_MILLIS));
     }
 
     @Override
     public Mono<CreateAccountResponse> createAccount(Mono<CreateAccountRequest> request) {
         return request.flatMap(req -> bankAccountService.createAccount(MapperKt.of(req))
-                .map(bankAccount -> CreateAccountResponse.newBuilder()
-                        .setAccountId(bankAccount)
-                        .build())
-                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
-                .doOnError(ex -> {
-                    log.error(ex.getMessage(), ex);
-                })
-                .doOnSuccess(result -> log.debug("created account: {}", result.getAccountId())));
+            .map(bankAccount -> CreateAccountResponse.newBuilder()
+                .setAccountId(bankAccount)
+                .build())
+            .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
+            .doOnError(ex -> {
+                log.error(ex.getMessage(), ex);
+            })
+            .doOnSuccess(result -> log.debug("created account: {}", result.getAccountId())));
     }
 
     @Override
     public Flux<TransferResponse> transferStream(Flux<TransferRequest> request) {
         return transactionService.prepareTransfer(request.map(MapperKt::newInstanceWithSpanId))
-                .timeout(Duration.ofMillis(TIMEOUT_MILLIS));
+            .timeout(Duration.ofMillis(TIMEOUT_MILLIS));
     }
 
     @Override
     public Mono<TransferResponse> transfer(Mono<TransferRequest> request) {
         return transactionService.prepareTransfer(request.flux().map(MapperKt::newInstanceWithSpanId))
-                .next()
-                .thenReturn(TransferResponse.getDefaultInstance())
-                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
-                .doOnError(ex -> {
-                    log.error(ex.getMessage(), ex);
-                })
-                .doOnSuccess(result -> log.debug("Write success tran: {}", result));
+            .next()
+            .thenReturn(TransferResponse.getDefaultInstance())
+            .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
+            .doOnError(ex -> {
+                log.error(ex.getMessage(), ex);
+            })
+            .doOnSuccess(result -> log.debug("Write success tran: {}", result));
     }
 
     @Override
@@ -79,7 +70,7 @@ public class WalletGrpcEndpoint extends ReactorWalletServiceGrpc.WalletServiceIm
     @Override
     public Mono<GetAccountByIdResponse> getAccountById(Mono<GetAccountByIdRequest> request) {
         return Mono.just(GetAccountByIdResponse.newBuilder()
-                .build());
+            .build());
     }
 
     @Override
@@ -87,7 +78,7 @@ public class WalletGrpcEndpoint extends ReactorWalletServiceGrpc.WalletServiceIm
         return request.map(req -> {
             return req;
         }).map(req -> WithdrawResponse.newBuilder()
-                .build());
+            .build());
     }
 
 }

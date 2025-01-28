@@ -21,13 +21,14 @@ public class TransactionRepositoryImpl implements TransactionCustomRepository {
     @Override
     public Mono<NewTransaction> insertBatch(Transaction transaction) {
         SimpleStatement transactionStatement = template.getStatementFactory()
-                .insert(transaction, WriteOptions.builder()
-                        .build()).build();
+            .insert(transaction, WriteOptions.builder()
+                .build()).build();
         SimpleStatement transactionByUserStatement = template.getStatementFactory()
-                .insert(new TransactionByAccount(transaction.getAccountId(), transaction.getId(), transaction.getTimeStamp()), WriteOptions.builder()
-                        .build()).build();
+            .insert(new TransactionByAccount(transaction.getAccountId(), transaction.getId(), transaction.getTimeStamp()), WriteOptions.builder()
+                .build()).build();
+
         BatchStatement statements = BatchStatement.newInstance(BatchType.LOGGED, transactionStatement, transactionByUserStatement);
         return template.execute(statements)
-                .map(r -> new NewTransaction(transaction.getId(), transaction.getRefId()));
+            .map(r -> new NewTransaction(transaction.getId(), transaction.getRefId()));
     }
 }

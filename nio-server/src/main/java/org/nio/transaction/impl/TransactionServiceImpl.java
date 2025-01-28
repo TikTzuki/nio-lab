@@ -47,7 +47,7 @@ public class TransactionServiceImpl {
                     return Flux.fromIterable(batch).map(TransactionMappersKt::genericFail);
                 }
             })
-            .doOnComplete(() -> log.info("Prepare complete: {}", System.currentTimeMillis() - start));
+            .doOnComplete(() -> log.debug("Published batch: {}", System.currentTimeMillis() - start));
     }
 
     public Mono<NewTransaction> persistTransaction(TransferRequest request) {
@@ -66,11 +66,12 @@ public class TransactionServiceImpl {
                     throw new InsufficientBalance(request.getReferenceId());
             })
             .onErrorResume(e -> true, e -> {
-                FailLogger.appendFail(TransferRequest.newBuilder()
-                    .setTraceId(request.getTraceId())
-                    .setSpanId(request.getSpanId())
-                    .setReferenceId(request.getReferenceId())
-                    .build(), e);
+                FailLogger.appendFail(new FailedTransaction(
+                    request.getTraceId(),
+                    request.getSpanId(),
+                    request.getReferenceId(),
+                    e.toString()
+                ));
                 return Mono.empty();
             })
             .flatMap(balanceAndVersion -> accountRepository.updateBalance(
@@ -82,7 +83,7 @@ public class TransactionServiceImpl {
             .flatMap(success -> {
                 if (!success) {
                     log.error("Update balance fail {} : stop mono", request);
-                    DeadLetterLogger.appendDeadLetter(request);
+                    DeadLetterLogger.appendDeadLetter(FailedTransaction.fromTransferRequest(request, null));
                     return Mono.empty();
                 }
                 return Mono.just(request);
@@ -109,13 +110,10 @@ public class TransactionServiceImpl {
             ))
             .doOnError(throwable -> {
                 log.error("Insert transaction fail", throwable);
-                onInsertTransactionFail(request);
+                DeadLetterLogger.appendDeadLetter(FailedTransaction.fromTransferRequest(request, throwable));
             })
             .onErrorResume(_ -> Mono.empty());
     }
 
-    public void onInsertTransactionFail(TransferRequest request) {
-        DeadLetterLogger.appendDeadLetter(request);
-    }
 
 }

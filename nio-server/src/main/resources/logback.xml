@@ -22,18 +22,29 @@
     <appender name="DeadLetterLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <filter class="org.nio.logging.DeadLetterLogger"/>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>{
-                "timestamp": "%d{yyyy-MM-dd HH:mm:ss.SSS}",
-                "thread": "%thread",
-                "class": "%logger{40}",
-                "message": "%msg"
-                }
+            <Pattern>
+                {"timestamp": "%d{yyyy-MM-dd HH:mm:ss.SSS}","thread": "%thread","class": "%logger{40}","message": "%msg"},\n
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/dead-letter-%d{yyyy-MM-dd-HH}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy
-                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+                <maxFileSize>100MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+    <appender name="FailLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="org.nio.logging.FailLogger"/>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                {"timestamp": "%d{yyyy-MM-dd HH:mm:ss.SSS}","thread": "%thread","class": "%logger{40}","message": "%msg"},\n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/fail-%d{yyyy-MM-dd-HH}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
                 <maxFileSize>100MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
@@ -42,6 +53,7 @@
         <root level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="DeadLetterLog"/>
+            <appender-ref ref="FailLog"/>
         </root>
     </springProfile>
     <springProfile name="prod | production">
@@ -49,6 +61,7 @@
             <appender-ref ref="Console"/>
             <appender-ref ref="RollingFile"/>
             <appender-ref ref="DeadLetterLog"/>
+            <appender-ref ref="FailLog"/>
         </root>
     </springProfile>
 </configuration>
