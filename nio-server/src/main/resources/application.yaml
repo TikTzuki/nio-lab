@@ -14,7 +14,7 @@ spring:
         #    password: Nt72v7ioLWEfo7fPbiWfjO1YZ2NWoxxAjLuQaqNdNA8wSbFKicPirjA
         #    contact-points: 10.8.0.7
         schema-action: create_if_not_exists
-        config: classpath:cassandra-application.conf
+        config: classpath:keyspaces-application.conf
         request:
             consistency: local_quorum
             serial-consistency: local_serial
@@ -30,7 +30,7 @@ logging:
         reactor.netty: off
         com.amazon: ${LOG_AWS:info}
         software.amazon: ${LOG_AWS:info}
-        com.datastax: ${LOG_CASSANDRA:debug}
+        com.datastax: ${LOG_CASSANDRA:info}
         web: info
         root: info
 management:
