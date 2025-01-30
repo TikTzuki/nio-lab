@@ -30,7 +30,7 @@ parameters(
 	[
 	$class: 'ChoiceParameter',
 	choiceType: 'PT_SINGLE_SELECT',
-	name: 'BuildBranch',
+	name: 'GitBranch',
 	script: [
 	$class: 'GroovyScript',
 	fallbackScript: [
@@ -51,7 +51,7 @@ parameters(
         );
         def userpass = jenkinsCredentials.findResult { it.id == "tiktzuki-github" ? it : null }
         def gettags = ("git ls-remote -t -h https://" + userpass.username + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
-        return gettags.text.readLines()
+        return gettags.text.readLines().collect { it.split()[1] }
     '''
 	]
 	]]
@@ -77,6 +77,9 @@ pipeline {
 			yamlFile "k8s/KubernetesPod.yaml"
 			retries 0
 		}
+	}
+	parameters {
+		string(name: 'BuildBranch', defaultValue: 'develop', description: 'Branch to build')
 	}
 	environment {
 		COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
