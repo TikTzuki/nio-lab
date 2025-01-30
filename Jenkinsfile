@@ -53,10 +53,7 @@ parameters(
         def gettags = ("git ls-remote -t -h https://" + userpass.username + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
 
         return gettags.text.readLines().collect {
-         it.split()[1]
-            .replaceAll('refs/heads/', '')
-            .replaceAll('refs/tags/','')
-            .replaceAll("\\\\^\\\\{\\\\}", '')
+            return it.split()[1]
         }
     '''
     ]
@@ -64,6 +61,10 @@ parameters(
     ]
 )
 ])
+//it.split()[1]
+//.replaceAll('refs/heads/', '')
+//.replaceAll('refs/tags/','')
+//.replaceAll("\\\\^\\\\{\\\\}", '')
 def buildDocker(context, imageName) {
     script {
         dockerImage = docker.build(imageName, context)
