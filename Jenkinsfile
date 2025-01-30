@@ -42,13 +42,22 @@ parameters(
     classpath:[],
     sandbox: false,
     script: '''
-        def gettags = ("git ls-remote -t -h git@tiktuzki:TikTzuki/nio-lab.git").execute()
-         return gettags.text.readLines().collect {
+        import jenkins.model.*
+        def jenkinsCredentials = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
+                com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials.class,
+                Jenkins.instance,
+                null,
+                null
+        );
+        def userpass = jenkinsCredentials.findResult { it.id == "tiktzuki-github" ? it : null }
+        def gettags = ("git ls-remote -t -h https://" + userpass.username" + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
+
+        return gettags.text.readLines().collect {
          it.split()[1]
             .replaceAll('refs/heads/', '')
             .replaceAll('refs/tags/','')
             .replaceAll("\\^\\{\\}", '')
-         }
+        }
     '''
     ]
     ]]
@@ -112,7 +121,8 @@ pipeline {
             steps {
                 container('jnlp'){
                     script{
-                        sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/credentials"
+                        sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials"
+                        sh "curl -o nio-server/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config"
                         switch(DEPLOY_TARGET){
                         case 'aws':
                         sh '''
