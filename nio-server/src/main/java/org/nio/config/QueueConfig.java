@@ -6,7 +6,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
-import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import java.net.URISyntaxException;
 import java.util.Objects;
@@ -24,8 +24,8 @@ public class QueueConfig implements InitializingBean {
     }
 
     @Bean
-    public SqsClient sqsClient() throws URISyntaxException {
-        var builder = SqsClient.builder()
+    public SqsAsyncClient sqsClient() throws URISyntaxException {
+        var builder = SqsAsyncClient.builder()
             .region(properties.getRegion())
             .credentialsProvider(ProfileCredentialsProvider.create());
         if (Objects.nonNull(properties.getUrlEndpoint())) {

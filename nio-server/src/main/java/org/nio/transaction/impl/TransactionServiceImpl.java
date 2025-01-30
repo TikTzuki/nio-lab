@@ -12,8 +12,7 @@ import org.nio.transaction.*;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.SendMessageBatchResponse;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -26,7 +25,7 @@ import java.util.UUID;
 public class TransactionServiceImpl {
     final TransactionRepository repository;
     final AccountRepository accountRepository;
-    final SqsClient sqsClient;
+    final SqsAsyncClient sqsClient;
 
     /**
      * Always return Response
@@ -38,15 +37,13 @@ public class TransactionServiceImpl {
         long start = System.currentTimeMillis();
         return request
             .bufferTimeout(10, Duration.ofMillis(1))
-            .flatMap(batch -> {
-                try {
-                    SendMessageBatchResponse response = MessageKt.publish(sqsClient, batch);
-                    return TransactionMappersKt.mapBatchResponse(batch, response);
-                } catch (Throwable e) {
+            .flatMap(batch -> MessageKt.publish(sqsClient, batch)
+                .flux()
+                .flatMap(it -> TransactionMappersKt.mapBatchResponse(batch, it))
+                .onErrorResume(e -> {
                     log.error(e.getMessage(), e);
                     return Flux.fromIterable(batch).map(TransactionMappersKt::genericFail);
-                }
-            })
+                }))
             .doOnComplete(() -> log.debug("Published batch: {}", System.currentTimeMillis() - start));
     }
 

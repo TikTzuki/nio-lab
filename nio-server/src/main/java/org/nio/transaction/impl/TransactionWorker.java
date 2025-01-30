@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
-import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
 import java.util.List;
@@ -33,7 +33,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @RequiredArgsConstructor
 @Component
 public class TransactionWorker {
-    final SqsClient sqsClient;
+    final SqsAsyncClient sqsClient;
     final TransactionServiceImpl transactionService;
     final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
     final TransactionConfig transactionConfig;
@@ -59,7 +59,9 @@ public class TransactionWorker {
             AtomicLong count = new AtomicLong();
             Flux.generate(initState, infinityMessageGenerator)
                 .concatMap(i -> {
-                    ReceiveMessageResponse sqsMessages = sqsClient.receiveMessage(receiveMessageRequest); // Block generator until has message
+                    return Mono.fromFuture(sqsClient.receiveMessage(receiveMessageRequest)); // Block generator until has message
+                })
+                .concatMap(sqsMessages -> {
                     log.debug("Poll {} messages", sqsMessages.messages().size());
                     return Flux.fromIterable(sqsMessages.messages());
                 })

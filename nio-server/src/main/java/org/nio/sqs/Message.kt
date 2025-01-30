@@ -3,8 +3,9 @@ package org.nio.sqs
 import com.nio.wallet.grpc.WalletServiceOuterClass.TransferRequest
 import mu.KotlinLogging
 import org.nio.config.QueueConfig
+import reactor.core.publisher.Mono
 import software.amazon.awssdk.core.SdkBytes
-import software.amazon.awssdk.services.sqs.SqsClient
+import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry
@@ -16,7 +17,7 @@ const val MESSAGE_CONTENT = "messageContent"
 const val TRACE_ID = "traceId"
 const val SPAN_ID = "spanId"
 
-fun SqsClient.publish(transactions: List<TransferRequest>): SendMessageBatchResponse {
+fun SqsAsyncClient.publish(transactions: List<TransferRequest>): Mono<SendMessageBatchResponse> {
     val startBatch = System.currentTimeMillis()
     val entries = transactions.map { transaction ->
         val transactionContent = MessageAttributeValue.builder()
@@ -40,7 +41,7 @@ fun SqsClient.publish(transactions: List<TransferRequest>): SendMessageBatchResp
         System.currentTimeMillis() - startBatch,
         entries.size,
     )
-    val batchResponse: SendMessageBatchResponse = this.sendMessageBatch(
+    val batchResponse = this.sendMessageBatch(
         SendMessageBatchRequest.builder()
             .queueUrl(QueueConfig.QUEUE_URL)
             .entries(entries)
@@ -51,5 +52,5 @@ fun SqsClient.publish(transactions: List<TransferRequest>): SendMessageBatchResp
         System.currentTimeMillis() - startBatch,
         entries.size
     )
-    return batchResponse
+    return Mono.fromFuture(batchResponse)
 }
