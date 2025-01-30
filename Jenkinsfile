@@ -45,7 +45,7 @@ parameters(
          it.split()[1]
             .replaceAll('refs/heads/', '')
             .replaceAll('refs/tags/','')
-            .replaceAll("\^\{\}", '')
+            .replaceAll("\\^\\{\\}", '')
          }
     '''
     ]]
