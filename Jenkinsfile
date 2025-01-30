@@ -78,9 +78,7 @@ pipeline {
                 echo sh(script: 'env|sort', returnStdout: true)
                 container('gradle'){
                     script {
-                        println(BUILD_BRANCH)
-                        println(BUILD_TARGET)
-                        println(DEPLOY_TARGET)
+                        println(BUILD_BRANCH +"-" + BUILD_TARGET +"-" + DEPLOY_TARGET)
                     }
                 }
             }
@@ -90,7 +88,7 @@ pipeline {
                 container('jnlp'){
                     script{
                         sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/credentials"
-                        switch(BUILD_TARGET){
+                        switch(DEPLOY_TARGET){
                         case 'aws':
                         sh '''
                             a="./nio-server/src/main/resources/cassandra_truststore.jks"
