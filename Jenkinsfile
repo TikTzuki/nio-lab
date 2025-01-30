@@ -27,6 +27,28 @@ parameters(
     "return['k8s','aws']"
     ]]
     ],
+    [
+    $class: 'ChoiceParameter',
+    choiceType: 'PT_SINGLE_SELECT',
+    name: 'GitBranch',
+    script: [
+    $class: 'GroovyScript',
+    classpath:[],
+    sandbox: false,
+    fallbackScript: [
+        classpath: [],
+        script: 'return ["develop"]'
+    ],
+    script: '''
+        def gettags = ("git ls-remote -t -h git@tiktuzki:TikTzuki/nio-lab.git").execute()
+         return gettags.text.readLines().collect {
+         it.split()[1]
+            .replaceAll('refs/heads/', '')
+            .replaceAll('refs/tags/','')
+            .replaceAll("\^\{\}", '')
+         }
+    '''
+    ]]
     ]
 )
 ])
