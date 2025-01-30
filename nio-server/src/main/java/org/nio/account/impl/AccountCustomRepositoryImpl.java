@@ -16,8 +16,8 @@ public class AccountCustomRepositoryImpl implements AccountCustomRepository<Acco
     @Override
     public Mono<String> insertLite(Account i) {
         var statement = template.getStatementFactory().insert(i, WriteOptions.builder()
-                .build()).build();
+            .build()).build();
         return template.execute(statement)
-                .mapNotNull(r -> i.getId());
+            .mapNotNull(r -> i.getId());
     }
 }

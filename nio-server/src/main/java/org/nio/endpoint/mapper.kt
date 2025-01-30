@@ -24,5 +24,5 @@ fun TransferRequest.newInstanceWithSpanId(): TransferRequest {
     this.toBuilder()
         .setSpanId(RandomStringUtils.insecure().nextAlphanumeric(16))
         .build()
-    return this;
+    return this
 }

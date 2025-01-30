@@ -26,8 +26,8 @@ public class QueueConfig implements InitializingBean {
     @Bean
     public SqsClient sqsClient() throws URISyntaxException {
         var builder = SqsClient.builder()
-                .region(properties.getRegion())
-                .credentialsProvider(ProfileCredentialsProvider.create());
+            .region(properties.getRegion())
+            .credentialsProvider(ProfileCredentialsProvider.create());
         if (Objects.nonNull(properties.getUrlEndpoint())) {
             builder.endpointOverride(properties.getUrlEndpoint().toURI());
         }

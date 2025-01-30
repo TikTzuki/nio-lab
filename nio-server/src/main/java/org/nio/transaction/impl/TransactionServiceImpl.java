@@ -5,10 +5,10 @@ import com.nio.wallet.grpc.WalletServiceOuterClass.TransferResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.nio.account.AccountRepository;
+import org.nio.logging.DeadLetterLogger;
 import org.nio.logging.FailLogger;
 import org.nio.sqs.MessageKt;
 import org.nio.transaction.*;
-import org.nio.logging.DeadLetterLogger;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,10 +18,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageBatchResponse;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,38 +41,13 @@ public class TransactionServiceImpl {
             .flatMap(batch -> {
                 try {
                     SendMessageBatchResponse response = MessageKt.publish(sqsClient, batch);
-                    return mapResponse(batch, response);
+                    return TransactionMappersKt.mapBatchResponse(batch, response);
                 } catch (Throwable e) {
                     log.error(e.getMessage(), e);
-                    return Mono.empty();
+                    return Flux.fromIterable(batch).map(TransactionMappersKt::genericFail);
                 }
             })
-            .doOnComplete(() -> log.info("Prepare complete: {}", System.currentTimeMillis() - start));
-    }
-
-    Flux<TransferResponse> mapResponse(List<TransferRequest> batch, SendMessageBatchResponse response) {
-        var batchMap = batch.stream().collect(Collectors.toMap(TransferRequest::getReferenceId, Function.identity()));
-        return Flux.concat(
-            Flux.fromIterable(response.failed()).map(resp -> {
-                var request = batchMap.get(resp.id());
-                log.error("{} {}",request,resp);
-                return TransferResponse.newBuilder()
-                    .setCode(-1)
-                    .setTraceId(request.getTraceId())
-                    .setSpanId(request.getSpanId())
-                    .setReferenceId(request.getReferenceId())
-                    .build();
-            }),
-            Flux.fromIterable(response.successful()).map(resp -> {
-                var request = batchMap.get(resp.id());
-                return TransferResponse.newBuilder()
-                    .setCode(0)
-                    .setTraceId(request.getTraceId())
-                    .setSpanId(request.getSpanId())
-                    .setReferenceId(request.getReferenceId())
-                    .build();
-            })
-        );
+            .doOnComplete(() -> log.debug("Published batch: {}", System.currentTimeMillis() - start));
     }
 
     public Mono<NewTransaction> persistTransaction(TransferRequest request) {
@@ -88,17 +60,19 @@ public class TransactionServiceImpl {
         var amount = new BigDecimal(request.getAmount());
         return accountRepository
             .getAccountBalance(accountId)
+            .switchIfEmpty(Mono.error(new RuntimeException("Account not found")))
             .doOnNext(balanceAndVersion -> {
                 log.debug("Balance: {}", balanceAndVersion.balance());
-                if (balanceAndVersion.balance().compareTo(amount) <= 0)
+                if (balanceAndVersion.balance().compareTo(amount) < 0)
                     throw new InsufficientBalance(request.getReferenceId());
             })
             .onErrorResume(e -> true, e -> {
-                FailLogger.appendFail(TransferRequest.newBuilder()
-                    .setTraceId(request.getTraceId())
-                    .setSpanId(request.getSpanId())
-                    .setReferenceId(request.getReferenceId())
-                    .build(), e);
+                FailLogger.appendFail(new FailedTransaction(
+                    request.getTraceId(),
+                    request.getSpanId(),
+                    request.getReferenceId(),
+                    e.toString()
+                ));
                 return Mono.empty();
             })
             .flatMap(balanceAndVersion -> accountRepository.updateBalance(
@@ -110,7 +84,7 @@ public class TransactionServiceImpl {
             .flatMap(success -> {
                 if (!success) {
                     log.error("Update balance fail {} : stop mono", request);
-                    DeadLetterLogger.appendDeadLetter(request);
+                    DeadLetterLogger.appendDeadLetter(FailedTransaction.fromTransferRequest(request, null));
                     return Mono.empty();
                 }
                 return Mono.just(request);
@@ -137,13 +111,10 @@ public class TransactionServiceImpl {
             ))
             .doOnError(throwable -> {
                 log.error("Insert transaction fail", throwable);
-                onInsertTransactionFail(request);
+                DeadLetterLogger.appendDeadLetter(FailedTransaction.fromTransferRequest(request, throwable));
             })
             .onErrorResume(_ -> Mono.empty());
     }
 
-    public void onInsertTransactionFail(TransferRequest request) {
-        DeadLetterLogger.appendDeadLetter(request);
-    }
 
 }

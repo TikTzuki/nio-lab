@@ -12,9 +12,9 @@ import software.amazon.awssdk.services.sqs.model.SendMessageBatchResponse
 
 val logger = KotlinLogging.logger {}
 
-const val MESSAGE_CONTENT = "messageContent";
-const val TRACE_ID = "traceId";
-const val SPAN_ID = "spanId";
+const val MESSAGE_CONTENT = "messageContent"
+const val TRACE_ID = "traceId"
+const val SPAN_ID = "spanId"
 
 fun SqsClient.publish(transactions: List<TransferRequest>): SendMessageBatchResponse {
     val startBatch = System.currentTimeMillis()
@@ -27,8 +27,8 @@ fun SqsClient.publish(transactions: List<TransferRequest>): SendMessageBatchResp
             .messageAttributes(
                 mapOf(
                     MESSAGE_CONTENT to transactionContent,
-                    TRACE_ID to MessageAttributeValue.builder().stringValue(transaction.traceId).build(),
-                    SPAN_ID to MessageAttributeValue.builder().stringValue(transaction.spanId).build()
+                    TRACE_ID to MessageAttributeValue.builder().stringValue(transaction.traceId).dataType("String").build(),
+                    SPAN_ID to MessageAttributeValue.builder().stringValue(transaction.spanId).dataType("String").build()
                 )
             )
             .id(transaction.referenceId)
@@ -47,9 +47,9 @@ fun SqsClient.publish(transactions: List<TransferRequest>): SendMessageBatchResp
             .build()
     )
     logger.debug(
-        "Transfer batch: {} - {}",
+        "Published batch: {} - {}",
         System.currentTimeMillis() - startBatch,
         entries.size
     )
-    return batchResponse;
+    return batchResponse
 }
