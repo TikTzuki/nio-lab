@@ -91,17 +91,19 @@ pipeline {
                     script{
                         sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/credentials"
                         switch(BUILD_TARGET){
-                            case 'aws':
-                            sh '''
+                        case 'aws':
+                        sh '''
                             a="./nio-server/src/main/resources/cassandra_truststore.jks"
                             b="BOOT-INF/classes/cassandra_truststore.jks"
                             sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
                             cat nio-server/src/main/resources/keyspaces-application.conf
-                            '''
-                            case 'k8s':
-                            sh '''
-                            echo build for k8s
-                            '''
+                        '''
+                        case 'k8s':
+                        sh '''
+                           echo build for k8s
+                        '''
+                        default:
+                        echo 'No build target selected'
                         }
                     }
                 }
