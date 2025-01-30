@@ -51,7 +51,7 @@ parameters(
         );
         def userpass = jenkinsCredentials.findResult { it.id == "tiktzuki-github" ? it : null }
         def gettags = ("git ls-remote -t -h https://" + userpass.username + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
-        return gettags.text.readLines()
+        return gettags.text.readLines().collect { it.split()[1] }
     '''
 	]
 	]]
@@ -80,6 +80,8 @@ pipeline {
 	}
 	environment {
 		COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
+		if(!params.BuildBranch?.trim())
+			ex("BuildBranch is not defined")
 		BUILD_BRANCH = "${params.BuildBranch}"
 		BUILD_TARGET = "${params.BuildTarget}"
 		DEPLOY_TARGET = "${params.DeployTarget}"
