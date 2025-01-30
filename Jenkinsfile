@@ -51,19 +51,17 @@ parameters(
         );
         def userpass = jenkinsCredentials.findResult { it.id == "tiktzuki-github" ? it : null }
         def gettags = ("git ls-remote -t -h https://" + userpass.username + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
-        return gettags.text.readLines().collect { it.split(" ")[1] }
-        //return gettags.text.readLines().collect {
-        //    return it.split()
-        //}
+        return gettags.text.readLines().collect {
+        	it.split()[1]
+        	.replaceAll('refs/heads/', '')
+        	.replaceAll('refs/tags/','')
+        }
     '''
 	]
 	]]
 	]
 )
 ])
-//it.split()[1]
-//.replaceAll('refs/heads/', '')
-//.replaceAll('refs/tags/','')
 //.replaceAll("\\\\^\\\\{\\\\}", '')
 def buildDocker(context, imageName) {
 	script {
@@ -128,7 +126,7 @@ pipeline {
 						case 'aws':
 						sh '''
 							apt update
-							apt install curl
+							apt install -y curl
                             mkdir -p nio-server/.aws
                             curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials --output nio-server/.aws/credentials
                             curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config --output nio-server/.aws/config
