@@ -27,7 +27,7 @@ public class TransactionRepositoryImpl implements TransactionCustomRepository {
             .insert(new TransactionByAccount(transaction.getAccountId(), transaction.getId(), transaction.getTimeStamp()), WriteOptions.builder()
                 .build()).build();
 
-        BatchStatement statements = BatchStatement.newInstance(BatchType.LOGGED, transactionStatement, transactionByUserStatement);
+        BatchStatement statements = BatchStatement.newInstance(BatchType.UNLOGGED, transactionStatement, transactionByUserStatement); // Keyspace not support LoggedBatch
         return template.execute(statements)
             .map(r -> new NewTransaction(transaction.getId(), transaction.getRefId()));
     }
