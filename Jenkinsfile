@@ -121,10 +121,12 @@ pipeline {
                             sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
                             cat nio-server/src/main/resources/keyspaces-application.conf
                         '''
+                        break;
                         case 'k8s':
                         sh '''
                            echo build for k8s
                         '''
+                        break;
                         default:
                         echo 'No build target selected'
                         }
