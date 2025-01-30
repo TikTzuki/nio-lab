@@ -95,7 +95,7 @@ pipeline {
 		DEPLOY_TARGET = "${params.DeployTarget}"
 		HASH_TAG = "${DEPLOY_TARGET}.${COMMIT_HASH}.${BUILD_NUMBER}"
 		TAG_VERSION = "${DEPLOY_TARGET}"
-		GHP_TOKEN = credentials('tiktzuki-github')
+		GHP_TOKEN = credentials('tiktuzki-gh-token')
 		REGISTRY_CREDENTIAL = "dockerhub-tiktuzki"
 	}
 	stages {
