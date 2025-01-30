@@ -130,8 +130,8 @@ pipeline {
                             mkdir -p nio-server/.aws
                             touch nio-server/.aws/credentials
                             touch nio-server/.aws/config
-                            curl https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials > nio-server/.aws/credentials
-                            curl https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config > nio-server/.aws/config
+                            curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials --output nio-server/.aws/credentials
+                            curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config --output nio-server/.aws/config
 
                             a="./nio-server/src/main/resources/cassandra_truststore.jks"
                             b="BOOT-INF/classes/cassandra_truststore.jks"
