@@ -85,6 +85,28 @@ pipeline {
                 }
             }
         }
+        stage('Modifiy source'){
+            steps {
+                container('jnlp'){
+                    script{
+                        sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/credentials"
+                        switch(BUILD_TARGET){
+                            case 'aws':
+                            sh '''
+                            a="./nio-server/src/main/resources/cassandra_truststore.jks"
+                            b="BOOT-INF/classes/cassandra_truststore.jks"
+                            sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
+                            cat nio-server/src/main/resources/keyspaces-application.conf
+                            '''
+                            case 'k8s':
+                            sh '''
+                            echo build for k8s
+                            '''
+                        }
+                    }
+                }
+            }
+        }
         stage('Assemble'){
             steps {
                 container('gradle'){
@@ -104,15 +126,8 @@ pipeline {
         stage('Build'){
             steps {
                 container('jnlp'){
-                    sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/credentials"
                     container('docker-in-docker') {
                         script {
-                            switch(DEPLOY_TARGET){
-                            case 'k8s':
-                            sh "build.sh build-k8s"
-                            case 'aws':
-                            sh "build.sh build-aws"
-                            }
                             def context = (BUILD_TARGET == 'nio-client') ? 'mock-client' : 'nio-server';
                             buildDocker(context, "tiktuzki/${BUILD_TARGET}")
                         }
