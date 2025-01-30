@@ -33,12 +33,14 @@ parameters(
     name: 'GitBranch',
     script: [
     $class: 'GroovyScript',
+    fallbackScript: [
     classpath:[],
     sandbox: false,
-    fallbackScript: [
-        classpath: [],
-        script: 'return ["develop"]'
+    script: 'return ["develop"]'
     ],
+    script: [
+    classpath:[],
+    sandbox: false,
     script: '''
         def gettags = ("git ls-remote -t -h git@tiktuzki:TikTzuki/nio-lab.git").execute()
          return gettags.text.readLines().collect {
@@ -48,6 +50,7 @@ parameters(
             .replaceAll("\\^\\{\\}", '')
          }
     '''
+    ]
     ]]
     ]
 )
