@@ -6,7 +6,7 @@ metadata:
 spec:
     containers:
         - name: gradle
-          image: gradle:8.10-jdk23
+          image: gradle:8.10.2-jdk23-jammy
           command:
               - cat
           tty: true
