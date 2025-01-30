@@ -53,7 +53,7 @@ parameters(
         def gettags = ("git ls-remote -t -h https://" + userpass.username + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
 
         return gettags.text.readLines().collect {
-            return it.split()[1]
+            return it.split()
         }
     '''
     ]
@@ -128,8 +128,6 @@ pipeline {
                         case 'aws':
                         sh '''
                             mkdir -p nio-server/.aws
-                            touch nio-server/.aws/credentials
-                            touch nio-server/.aws/config
                             curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials --output nio-server/.aws/credentials
                             curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config --output nio-server/.aws/config
 
