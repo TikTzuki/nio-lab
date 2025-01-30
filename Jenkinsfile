@@ -51,11 +51,9 @@ parameters(
         );
         def userpass = jenkinsCredentials.findResult { it.id == "tiktzuki-github" ? it : null }
         def gettags = ("git ls-remote -t -h https://" + userpass.username + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
-        return gettags.text.readLines().collect {
-        	it.split()[1]
-        	.replaceAll('refs/heads/', '')
-        	.replaceAll('refs/tags/','')
-        }
+        return gettags.text.readLines().collect { it.split()[1]
+        .replaceAll('refs/heads/', '')
+        .replaceAll('refs/tags/','') }
     '''
 	]
 	]]
