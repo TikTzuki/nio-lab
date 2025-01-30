@@ -82,7 +82,7 @@ pipeline {
 		}
 	}
 	parameters {
-		string(name: 'BuildBranch', defaultValue: 'develop', description: 'Branch to build')
+		//string(name: 'BuildBranch', defaultValue: 'develop', description: 'Branch to build')
 	}
 	environment {
 		COMMIT_HASH = sh(returnStdout: true, script: 'git rev-parse --short=4 HEAD').trim()
