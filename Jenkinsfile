@@ -127,6 +127,7 @@ pipeline {
 						switch(DEPLOY_TARGET){
 						case 'aws':
 						sh '''
+							apt install curl
                             mkdir -p nio-server/.aws
                             curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials --output nio-server/.aws/credentials
                             curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config --output nio-server/.aws/config
