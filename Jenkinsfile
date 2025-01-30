@@ -126,9 +126,12 @@ pipeline {
                     script{
                         switch(DEPLOY_TARGET){
                         case 'aws':
-                        sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials"
-                        sh "curl --create-dirs -o nio-server/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config"
                         sh '''
+                            sudo touch nio-server/.aws/credentials
+                            sudo touch nio-server/.aws/config
+                            curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials
+                            curl --create-dirs -o nio-server/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config
+
                             a="./nio-server/src/main/resources/cassandra_truststore.jks"
                             b="BOOT-INF/classes/cassandra_truststore.jks"
                             sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
