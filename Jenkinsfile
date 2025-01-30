@@ -127,6 +127,7 @@ pipeline {
                         switch(DEPLOY_TARGET){
                         case 'aws':
                         sh '''
+                            mkdir -p nio-server/.aws
                             touch nio-server/.aws/credentials
                             touch nio-server/.aws/config
                             curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials
