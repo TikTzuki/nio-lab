@@ -121,10 +121,10 @@ pipeline {
             steps {
                 container('jnlp'){
                     script{
-                        sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials"
-                        sh "curl -o nio-server/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config"
                         switch(DEPLOY_TARGET){
                         case 'aws':
+                        sh "curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials"
+                        sh "curl --create-dirs -o nio-server/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config"
                         sh '''
                             a="./nio-server/src/main/resources/cassandra_truststore.jks"
                             b="BOOT-INF/classes/cassandra_truststore.jks"
