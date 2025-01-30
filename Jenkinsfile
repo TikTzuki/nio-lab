@@ -92,8 +92,10 @@ pipeline {
 		stage('Checkout') {
 			steps {
 				script{
-					if(!params.BuildBranch?.trim())
-						ex("BuildBranch is not defined")
+					if(!params.BuildBranch?.trim()){
+						currentBuild.result = 'ABORTED'
+						error("BuildBranch is not defined")
+					}
 
 					git branch: "${params.BuildBranch}",
 					credentialsId: "tiktzuki-github",
