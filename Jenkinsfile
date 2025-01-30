@@ -64,9 +64,6 @@ def buildDocker(context, imageName) {
 		dockerImage = docker.build(imageName, context)
 	}
 	script {
-		sh 'cat nio-server/src/main/resources/keyspaces-application.conf'
-		sh 'cat nio-server/.aws/credentials'
-		sh 'cat nio-server/.aws/config'
 		docker.withRegistry('https://registry.hub.docker.com', REGISTRY_CREDENTIAL) {
 			//dockerImage.push(HASH_TAG)
 			dockerImage.push(TAG_VERSION)
@@ -109,27 +106,25 @@ pipeline {
 				echo sh(script: 'env|sort', returnStdout: true)
 				container('gradle'){
 					script {
-						println(BUILD_BRANCH +"-" + BUILD_TARGET +"-" + DEPLOY_TARGET)
+						println(BUILD_BRANCH + "-" + BUILD_TARGET + "-" + DEPLOY_TARGET)
 					}
 				}
 			}
 		}
-		stage('Assemble'){
+		stage ('Modify source') {
 			steps {
-				container('gradle'){
+				container('jnlp'){
 					script{
 						switch(DEPLOY_TARGET){
 						case 'aws':
 						sh '''
-							apt update
-							apt install -y curl
-                            mkdir -p nio-server/.aws
-                            curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials --output nio-server/.aws/credentials
-                            curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config --output nio-server/.aws/config
+                            curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials
+                            curl --create-dirs -o nio-server/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config
 
                             a="./nio-server/src/main/resources/cassandra_truststore.jks"
                             b="BOOT-INF/classes/cassandra_truststore.jks"
                             sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
+
                             cat nio-server/src/main/resources/keyspaces-application.conf
                             cat nio-server/.aws/credentials
                             cat nio-server/.aws/config
@@ -144,6 +139,14 @@ pipeline {
 						echo 'No build target selected'
 						}
 
+					}
+				}
+			}
+		}
+		stage('Assemble'){
+			steps {
+				container('gradle'){
+					script{
 						switch(BUILD_TARGET){
 						case 'nio-client':
 						sh 'gradle clean mock-client:bootJar'
