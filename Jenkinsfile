@@ -70,8 +70,8 @@ def buildDocker(context, imageName) {
     }
     script {
         sh 'cat nio-server/src/main/resources/keyspaces-application.conf'
-        sh 'cat /nio-server/.aws/credentials'
-        sh 'cat /nio-server/.aws/config'
+        sh 'cat nio-server/.aws/credentials'
+        sh 'cat nio-server/.aws/config'
         docker.withRegistry('https://registry.hub.docker.com', REGISTRY_CREDENTIAL) {
             //dockerImage.push(HASH_TAG)
             dockerImage.push(TAG_VERSION)
