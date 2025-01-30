@@ -133,6 +133,8 @@ pipeline {
                             b="BOOT-INF/classes/cassandra_truststore.jks"
                             sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
                             cat nio-server/src/main/resources/keyspaces-application.conf
+                            cat nio-server/.aws/credentials
+                            cat nio-server/.aws/config
                         '''
                         break;
                         case 'k8s':
