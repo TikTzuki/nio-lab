@@ -30,7 +30,7 @@ parameters(
 	[
 	$class: 'ChoiceParameter',
 	choiceType: 'PT_SINGLE_SELECT',
-	name: 'GitBranch',
+	name: 'BuildBranch',
 	script: [
 	$class: 'GroovyScript',
 	fallbackScript: [
