@@ -47,7 +47,10 @@ ext {
             // Test
             testImplementation "org.junit.jupiter:junit-jupiter"
             testImplementation "org.testng:testng:7.10.2"
-            testImplementation 'org.assertj:assertj-core'
+            testImplementation "org.assertj:assertj-core"
+            testImplementation "io.projectreactor:reactor-test"
+            testImplementation "org.mockito:mockito-core"
+            testImplementation "org.mockito:mockito-junit-jupiter"
         }
         dependencyManagement {
             imports {

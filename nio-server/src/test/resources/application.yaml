@@ -14,7 +14,7 @@ spring:
         #    password: Nt72v7ioLWEfo7fPbiWfjO1YZ2NWoxxAjLuQaqNdNA8wSbFKicPirjA
         #    contact-points: 10.8.0.7
         schema-action: create_if_not_exists
-        config: classpath:cassandra-application.conf
+        config: classpath:keyspaces-application.conf
         request:
             consistency: local_quorum
             serial-consistency: local_serial
@@ -23,14 +23,14 @@ spring:
             enabled: true
 logging:
     level:
-        org.nio: info
+        org.nio: debug
         org.nio.transaction.org.nio.transaction.DeadLetterLogger: error
-        ork.springframework.data.cassandra.core.cql.ReactiveCqlTemplate: ${LOG_CASSANDRA:error}
+        ork.springframework.data.cassandra.core.cql.ReactiveCqlTemplate: ${LOG_CASSANDRA:debug}
         io.grpc: error
         reactor.netty: off
-        com.amazon: ${LOG_AWS:error}
-        software.amazon: ${LOG_AWS:error}
-        com.datastax: ${LOG_CASSANDRA:error}
+        com.amazon: ${LOG_AWS:info}
+        software.amazon: ${LOG_AWS:info}
+        com.datastax: ${LOG_CASSANDRA:info}
         web: info
         root: info
 management:

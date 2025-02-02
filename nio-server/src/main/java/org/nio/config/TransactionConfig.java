@@ -12,4 +12,5 @@ public class TransactionConfig {
     int numberOfMessages;
     int bufferSize;
     Duration bufferTime;
+    int hashRingSize;
 }

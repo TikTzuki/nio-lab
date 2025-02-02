@@ -19,7 +19,7 @@ Resources:
       SubnetIds:
       - "subnet-0129b89b46289c74f"
       - "subnet-037c0d407a9a44935"
-      - "subnet-05295d39fb3c70ac1"
+      - "subnet-053f790e5c13c46ed"
       ServiceNetworkArn: ""
       VpcId: "vpc-0e56e76b69f73d8c1"
       RouteTableIds: []
