@@ -14,7 +14,7 @@ data:
       client:
         bank-account-service:
             address: static://nio-server.nio-lab:9090
-          negotiation-type: plaintext
+            negotiation-type: plaintext
     logging:
       level:
           web: off
