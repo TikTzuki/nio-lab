@@ -1,223 +1,223 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: nio-server-log-pvc
-  annotations:
-    pv.kubernetes.io/bind-completed: 'yes'
-    pv.kubernetes.io/bound-by-controller: 'yes'
-    volume.beta.kubernetes.io/storage-provisioner: openebs.io/local
-    volume.kubernetes.io/selected-node: node1
-    volume.kubernetes.io/storage-provisioner: openebs.io/local
-  finalizers:
-    - kubernetes.io/pvc-protection
+    name: nio-server-log-pvc
+    annotations:
+        pv.kubernetes.io/bind-completed: 'yes'
+        pv.kubernetes.io/bound-by-controller: 'yes'
+        volume.beta.kubernetes.io/storage-provisioner: openebs.io/local
+        volume.kubernetes.io/selected-node: node1
+        volume.kubernetes.io/storage-provisioner: openebs.io/local
+    finalizers:
+        - kubernetes.io/pvc-protection
 spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 2Gi
-  selector:
-    matchLabels:
-      app: nio-server-log
-  volumeName: nio-server-log-pv
-  storageClassName: local
-  volumeMode: Filesystem
+    accessModes:
+        - ReadWriteOnce
+    resources:
+        requests:
+            storage: 2Gi
+    selector:
+        matchLabels:
+            app: nio-server-log
+    volumeName: nio-server-log-pv
+    storageClassName: local
+    volumeMode: Filesystem
 ---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: nio-server-log-pv
-  labels:
-    openebs.io/cas-type: local-hostpath
-    app: nio-server-log
-  annotations:
-    pv.kubernetes.io/provisioned-by: openebs.io/local
-  finalizers:
-    - kubernetes.io/pv-protection
+    name: nio-server-log-pv
+    labels:
+        openebs.io/cas-type: local-hostpath
+        app: nio-server-log
+    annotations:
+        pv.kubernetes.io/provisioned-by: openebs.io/local
+    finalizers:
+        - kubernetes.io/pv-protection
 spec:
-  capacity:
-    storage: 20Gi
-  local:
-    path: /home/tik/nio-server/data/log
-    fsType: ''
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: local
-  volumeMode: Filesystem
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-        - matchExpressions:
-            - key: kubernetes.io/hostname
-              operator: In
-              values:
-                - node1
+    capacity:
+        storage: 20Gi
+    local:
+        path: /home/tik/nio-server/data/log
+        fsType: ''
+    accessModes:
+        - ReadWriteOnce
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: local
+    volumeMode: Filesystem
+    nodeAffinity:
+        required:
+            nodeSelectorTerms:
+                -   matchExpressions:
+                        -   key: kubernetes.io/hostname
+                            operator: In
+                            values:
+                                - node1
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: nio-server
-  namespace: nio-lab
+    name: nio-server
+    namespace: nio-lab
 data:
-  application.yaml: |-
-    grpc:
-      server:
-        port: 9090
-        reflection-service-enabled: true
-        keep-alive-timeout: 20s
-    spring:
-      main:
-        web-application-type: reactive
-      cassandra:
-        keyspace-name: nio_lab
-        schema-action: create_if_not_exists
-        config: classpath:cassandra-application.conf
-        request:
-          consistency: local_quorum
-          serial-consistency: local_serial
-      threads:
-        virtual:
-          enabled: true
-    logging:
-      level:
-          org.nio: info
-          org.nio.transaction.org.nio.transaction.DeadLetterLogger: error
-          ork.springframework.data.cassandra.core.cql.ReactiveCqlTemplate: ${LOG_CASSANDRA:error}
-        io.grpc: error
-        reactor.netty: off
-          com.amazon: ${LOG_AWS:error}
-          software.amazon: ${LOG_AWS:error}
-          com.datastax: ${LOG_CASSANDRA:error}
-        web: info
-        root: info
-    management:
-      endpoints:
-        web:
-          exposure:
-            include: [ "*" ]
-    server:
-      port: 8080
-    sqs:
-      region: ap-southeast-1
-      name: nio-lab
-      url: https://sqs.ap-southeast-1.amazonaws.com/730335282524/nio-lab-k8s
-    transaction:
-      receive-message-wait-time: 20s
-      buffer-size: 10
-      buffer-time: 50s
-      number-of-messages: 10
-      hash-ring-size: 16
-  cassandra-application.yaml: |-
-    datastax-java-driver {
-    basic.contact-points = ["cluster1-dc1-service.database:9042"]
-    advanced.auth-provider {
+    application.yaml: |-
+        grpc:
+            server:
+                port: 9090
+                reflection-service-enabled: true
+                keep-alive-timeout: 20s
+        spring:
+            main:
+                web-application-type: reactive
+            cassandra:
+                keyspace-name: nio_lab
+                schema-action: create_if_not_exists
+                config: classpath:cassandra-application.conf
+                request:
+                    consistency: local_quorum
+                    serial-consistency: local_serial
+            threads:
+                virtual:
+                    enabled: true
+        logging:
+            level:
+                org.nio: info
+                org.nio.transaction.org.nio.transaction.DeadLetterLogger: error
+                ork.springframework.data.cassandra.core.cql.ReactiveCqlTemplate: ${LOG_CASSANDRA:error}
+                io.grpc: error
+                reactor.netty: off
+                com.amazon: ${LOG_AWS:error}
+                software.amazon: ${LOG_AWS:error}
+                com.datastax: ${LOG_CASSANDRA:error}
+                web: info
+                root: info
+        management:
+            endpoints:
+                web:
+                    exposure:
+                        include: [ "*" ]
+        server:
+            port: 8080
+        sqs:
+            region: ap-southeast-1
+            name: nio-lab
+            url: https://sqs.ap-southeast-1.amazonaws.com/730335282524/nio-lab-k8s
+        transaction:
+            receive-message-wait-time: 20s
+            buffer-size: 10
+            buffer-time: 50s
+            number-of-messages: 10
+            hash-ring-size: 16
+    cassandra-application.yaml: |-
+        datastax-java-driver {
+        basic.contact-points = ["cluster1-dc1-service.database:9042"]
+        advanced.auth-provider {
         class = PlainTextAuthProvider
         username = "cluster1-superuser"
         password = "t72v7ioLWEfo7fPbiWfjO1YZ2NWoxxAjLuQaqNdNA8wSbFKicPirjA"
-    }
-    basic.load-balancing-policy {
-    local-datacenter = "dc1"
-    slow-replica-avoidance = false
-    }
-        advanced.connection.pool.local.size = 16
-    }
-  keyspaces-application.conf: |-
-      datastax-java-driver {
-        basic.contact-points = [ "cassandra.ap-southeast-1.amazonaws.com:9142"]
-        advanced.auth-provider{
-            class = PlainTextAuthProvider
-            username = "nio-at-730335282524"
-            password = "0yAOoOkQojZAybEYuwxBpAbJNVPOsfPSWuviIKiK+xTgjRVOC6lRVuDtdz0="
         }
         basic.load-balancing-policy {
-            local-datacenter = "ap-southeast-1"
-            slow-replica-avoidance = false
+        local-datacenter = "dc1"
+        slow-replica-avoidance = false
         }
-         advanced.connection.pool.local.size = 16
-      }
+        advanced.connection.pool.local.size = 16
+        }
+    keyspaces-application.conf: |-
+        datastax-java-driver {
+          basic.contact-points = [ "cassandra.ap-southeast-1.amazonaws.com:9142"]
+          advanced.auth-provider{
+              class = PlainTextAuthProvider
+              username = "nio-at-730335282524"
+              password = "0yAOoOkQojZAybEYuwxBpAbJNVPOsfPSWuviIKiK+xTgjRVOC6lRVuDtdz0="
+          }
+          basic.load-balancing-policy {
+              local-datacenter = "ap-southeast-1"
+              slow-replica-avoidance = false
+          }
+           advanced.connection.pool.local.size = 16
+        }
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nio-server
-  namespace: nio-lab
-  labels:
-    app: nio-server
-spec:
-  replicas: 1
-  strategy:
-    type: RollingUpdate
-  selector:
-    matchLabels:
-      app: nio-server
-  template:
-    metadata:
-      labels:
+    name: nio-server
+    namespace: nio-lab
+    labels:
         app: nio-server
-    spec:
-      containers:
-        - name: nio-server
-          image: tiktuzki/nio-server:k8s
-          imagePullPolicy: Always
-#          resources:
-#            limits:
-#              memory: '1Gi'
-#              cpu: '2'
-          args: [ ]
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: 'prod'
-          ports:
-            - name: http
-              containerPort: 8080
-          livenessProbe:
-            tcpSocket:
-              port: 9090
-            initialDelaySeconds: 30
-            periodSeconds: 20
-            timeoutSeconds: 120
-            successThreshold: 1
-            failureThreshold: 3
-          readinessProbe:
-            tcpSocket:
-              port: 9090
-            initialDelaySeconds: 25
-            periodSeconds: 30
-            timeoutSeconds: 150
-            successThreshold: 1
-            failureThreshold: 3
-          volumeMounts:
-            - name: config-volume
-              mountPath: /workspace/config
-            - name: logs
-              mountPath: /workspace/log
-      volumes:
-        - name: config-volume
-          configMap:
-            name: nio-server
-        - name: logs
-          persistentVolumeClaim:
-            claimName: nio-server-log-pvc
+spec:
+    replicas: 1
+    strategy:
+        type: RollingUpdate
+    selector:
+        matchLabels:
+            app: nio-server
+    template:
+        metadata:
+            labels:
+                app: nio-server
+        spec:
+            containers:
+                -   name: nio-server
+                    image: tiktuzki/nio-server:k8s
+                    imagePullPolicy: Always
+                    #          resources:
+                    #            limits:
+                    #              memory: '1Gi'
+                    #              cpu: '2'
+                    args: [ ]
+                    env:
+                        -   name: SPRING_PROFILES_ACTIVE
+                            value: 'prod'
+                    ports:
+                        -   name: http
+                            containerPort: 8080
+                    livenessProbe:
+                        tcpSocket:
+                            port: 9090
+                        initialDelaySeconds: 30
+                        periodSeconds: 20
+                        timeoutSeconds: 120
+                        successThreshold: 1
+                        failureThreshold: 3
+                    readinessProbe:
+                        tcpSocket:
+                            port: 9090
+                        initialDelaySeconds: 25
+                        periodSeconds: 30
+                        timeoutSeconds: 150
+                        successThreshold: 1
+                        failureThreshold: 3
+                    volumeMounts:
+                        -   name: config-volume
+                            mountPath: /workspace/config
+                        -   name: logs
+                            mountPath: /workspace/log
+            volumes:
+                -   name: config-volume
+                    configMap:
+                        name: nio-server
+                -   name: logs
+                    persistentVolumeClaim:
+                        claimName: nio-server-log-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    app: nio-server
-  name: nio-server
+    labels:
+        app: nio-server
+    name: nio-server
 spec:
-  ports:
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 8080
-      nodePort: 30003
-    - name: grpc
-      port: 9090
-      protocol: TCP
-      targetPort: 9090
-      nodePort: 30004
-  selector:
-    app: nio-server
-  type: LoadBalancer
+    ports:
+        -   name: http
+            port: 80
+            protocol: TCP
+            targetPort: 8080
+            nodePort: 30003
+        -   name: grpc
+            port: 9090
+            protocol: TCP
+            targetPort: 9090
+            nodePort: 30004
+    selector:
+        app: nio-server
+    type: LoadBalancer
