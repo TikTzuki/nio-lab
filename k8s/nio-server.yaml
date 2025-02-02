@@ -81,14 +81,14 @@ data:
           enabled: true
     logging:
       level:
-        org.nio: debug
-        org.nio.transaction.TranLogger: error
-        org.springframework.data.cassandra.core.cql.ReactiveCqlTemplate: ${LOG_CASSANDRA:debug}
+          org.nio: info
+          org.nio.transaction.org.nio.transaction.DeadLetterLogger: error
+          ork.springframework.data.cassandra.core.cql.ReactiveCqlTemplate: ${LOG_CASSANDRA:error}
         io.grpc: error
         reactor.netty: off
-        com.amazon: ${LOG_AWS:debug}
-        software.amazon: ${LOG_AWS:debug}
-        com.datastax: ${LOG_CASSANDRA:debug}
+          com.amazon: ${LOG_AWS:error}
+          software.amazon: ${LOG_AWS:error}
+          com.datastax: ${LOG_CASSANDRA:error}
         web: info
         root: info
     management:
@@ -101,26 +101,41 @@ data:
     sqs:
       region: ap-southeast-1
       name: nio-lab
-      url: https://sqs.ap-southeast-1.amazonaws.com/730335282524/nio-lab
+      url: https://sqs.ap-southeast-1.amazonaws.com/730335282524/nio-lab-k8s
     transaction:
       receive-message-wait-time: 20s
       buffer-size: 10
       buffer-time: 50s
       number-of-messages: 10
+      hash-ring-size: 16
   cassandra-application.yaml: |-
     datastax-java-driver {
     basic.contact-points = ["cluster1-dc1-service.database:9042"]
     advanced.auth-provider {
-    class = PlainTextAuthProvider
-    username = "cluster1-superuser"
-    password = "t72v7ioLWEfo7fPbiWfjO1YZ2NWoxxAjLuQaqNdNA8wSbFKicPirjA"
+        class = PlainTextAuthProvider
+        username = "cluster1-superuser"
+        password = "t72v7ioLWEfo7fPbiWfjO1YZ2NWoxxAjLuQaqNdNA8wSbFKicPirjA"
     }
     basic.load-balancing-policy {
     local-datacenter = "dc1"
     slow-replica-avoidance = false
     }
-    advanced.connection.pool.local.size = 3
+        advanced.connection.pool.local.size = 16
     }
+  keyspaces-application.conf: |-
+      datastax-java-driver {
+        basic.contact-points = [ "cassandra.ap-southeast-1.amazonaws.com:9142"]
+        advanced.auth-provider{
+            class = PlainTextAuthProvider
+            username = "nio-at-730335282524"
+            password = "0yAOoOkQojZAybEYuwxBpAbJNVPOsfPSWuviIKiK+xTgjRVOC6lRVuDtdz0="
+        }
+        basic.load-balancing-policy {
+            local-datacenter = "ap-southeast-1"
+            slow-replica-avoidance = false
+        }
+         advanced.connection.pool.local.size = 16
+      }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -143,7 +158,7 @@ spec:
     spec:
       containers:
         - name: nio-server
-          image: tiktuzki/nio-server:latest
+          image: tiktuzki/nio-server:k8s
           imagePullPolicy: Always
 #          resources:
 #            limits:
