@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
         - name: nio-client
-          image: tiktuzki/nio-client:latest
+          image: tiktuzki/nio-client:k8s
           imagePullPolicy: Always
           #          resources:
           #            limits:
