@@ -51,13 +51,14 @@ parameters(
         );
         def userpass = jenkinsCredentials.findResult { it.id == "tiktzuki-github" ? it : null }
         def gettags = ("git ls-remote -t -h https://" + userpass.username + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
-        return gettags.text.readLines().collect { it.split()[1] }
+        return gettags.text.readLines()
     '''
 	]
 	]]
 	]
 )
 ])
+//.collect { it.split()[1] }
 //.replaceAll("\\\\^\\\\{\\\\}", '')
 def buildDocker(context, imageName) {
 	script {
@@ -123,20 +124,22 @@ pipeline {
 						switch(DEPLOY_TARGET){
 						case 'aws':
 						sh '''
-                            curl --create-dirs -o nio-server/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials
-                            curl --create-dirs -o nio-server/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config
+                            curl --create-dirs -o nio-server/root/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials
+                            curl --create-dirs -o nio-server/root/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config
 
                             a="./nio-server/src/main/resources/cassandra_truststore.jks"
                             b="BOOT-INF/classes/cassandra_truststore.jks"
                             sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
 
+                            # validate
                             cat nio-server/src/main/resources/keyspaces-application.conf
-                            cat nio-server/.aws/credentials
-                            cat nio-server/.aws/config
+                            cat nio-server/root/.aws/credentials
+                            cat nio-server/root/.aws/config
                         '''
 						break;
 						case 'k8s':
 						sh '''
+						   mkdir -p nio-server/root/
                            echo build for k8s
                         '''
 						break;
