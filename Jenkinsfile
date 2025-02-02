@@ -52,27 +52,19 @@ parameters(
         def userpass = jenkinsCredentials.findResult { it.id == "tiktzuki-github" ? it : null }
         def gettags = ("git ls-remote -t -h https://" + userpass.username + ":" + userpass.password + "@github.com/TikTzuki/nio-lab.git").execute()
         return gettags.text.readLines()
-        //return gettags.text.readLines().collect {
-        //    return it.split()
-        //}
     '''
 	]
 	]]
 	]
 )
 ])
-//it.split()[1]
-//.replaceAll('refs/heads/', '')
-//.replaceAll('refs/tags/','')
+//.collect { it.split()[1] }
 //.replaceAll("\\\\^\\\\{\\\\}", '')
 def buildDocker(context, imageName) {
 	script {
 		dockerImage = docker.build(imageName, context)
 	}
 	script {
-		sh 'cat nio-server/src/main/resources/keyspaces-application.conf'
-		sh 'cat nio-server/.aws/credentials'
-		sh 'cat nio-server/.aws/config'
 		docker.withRegistry('https://registry.hub.docker.com', REGISTRY_CREDENTIAL) {
 			//dockerImage.push(HASH_TAG)
 			dockerImage.push(TAG_VERSION)
@@ -97,13 +89,18 @@ pipeline {
 		DEPLOY_TARGET = "${params.DeployTarget}"
 		HASH_TAG = "${DEPLOY_TARGET}.${COMMIT_HASH}.${BUILD_NUMBER}"
 		TAG_VERSION = "${DEPLOY_TARGET}"
-		GHP_TOKEN = credentials('tiktzuki-github')
+		GHP_TOKEN = credentials('tiktuzki-gh-token')
 		REGISTRY_CREDENTIAL = "dockerhub-tiktuzki"
 	}
 	stages {
 		stage('Checkout') {
 			steps {
 				script{
+					if(!params.BuildBranch?.trim()){
+						currentBuild.result = 'ABORTED'
+						error("BuildBranch is not defined")
+					}
+
 					git branch: "${params.BuildBranch}",
 					credentialsId: "tiktzuki-github",
 					url: "${GIT_URL}"
@@ -115,7 +112,41 @@ pipeline {
 				echo sh(script: 'env|sort', returnStdout: true)
 				container('gradle'){
 					script {
-						println(BUILD_BRANCH +"-" + BUILD_TARGET +"-" + DEPLOY_TARGET)
+						println(BUILD_BRANCH + "-" + BUILD_TARGET + "-" + DEPLOY_TARGET)
+					}
+				}
+			}
+		}
+		stage ('Modify source') {
+			steps {
+				container('jnlp'){
+					script{
+						switch(DEPLOY_TARGET){
+						case 'aws':
+						sh '''
+                            curl --create-dirs -o nio-server/root/.aws/credentials https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials
+                            curl --create-dirs -o nio-server/root/.aws/config https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config
+
+                            a="./nio-server/src/main/resources/cassandra_truststore.jks"
+                            b="BOOT-INF/classes/cassandra_truststore.jks"
+                            sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
+
+                            # validate
+                            cat nio-server/src/main/resources/keyspaces-application.conf
+                            cat nio-server/root/.aws/credentials
+                            cat nio-server/root/.aws/config
+                        '''
+						break;
+						case 'k8s':
+						sh '''
+						   mkdir -p nio-server/root/
+                           echo build for k8s
+                        '''
+						break;
+						default:
+						echo 'No build target selected'
+						}
+
 					}
 				}
 			}
@@ -124,30 +155,6 @@ pipeline {
 			steps {
 				container('gradle'){
 					script{
-						switch(DEPLOY_TARGET){
-						case 'aws':
-						sh '''
-                            mkdir -p nio-server/.aws
-                            curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/credentials --output nio-server/.aws/credentials
-                            curl --url https://x-access-token:$GHP_TOKEN@raw.githubusercontent.com/TikTzuki/config-repos/refs/heads/master/nio-lab/server/.aws/config --output nio-server/.aws/config
-
-                            a="./nio-server/src/main/resources/cassandra_truststore.jks"
-                            b="BOOT-INF/classes/cassandra_truststore.jks"
-                            sed -i -e "s%${a}%${b}%g" nio-server/src/main/resources/keyspaces-application.conf
-                            cat nio-server/src/main/resources/keyspaces-application.conf
-                            cat nio-server/.aws/credentials
-                            cat nio-server/.aws/config
-                        '''
-						break;
-						case 'k8s':
-						sh '''
-                           echo build for k8s
-                        '''
-						break;
-						default:
-						echo 'No build target selected'
-						}
-
 						switch(BUILD_TARGET){
 						case 'nio-client':
 						sh 'gradle clean mock-client:bootJar'
