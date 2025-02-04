@@ -108,19 +108,19 @@ data:
             buffer-time: 50s
             number-of-messages: 10
             hash-ring-size: 16
-    cassandra-application.yaml: |-
+    cassandra-application.conf: |-
         datastax-java-driver {
-        basic.contact-points = ["cluster1-dc1-service.database:9042"]
-        advanced.auth-provider {
-        class = PlainTextAuthProvider
-        username = "cluster1-superuser"
-        password = "t72v7ioLWEfo7fPbiWfjO1YZ2NWoxxAjLuQaqNdNA8wSbFKicPirjA"
+            basic.contact-points = ["cluster1-dc1-service.database:9042"]
+            advanced.auth-provider {
+            class = PlainTextAuthProvider
+            username = "cluster1-superuser"
+            password = "t72v7ioLWEfo7fPbiWfjO1YZ2NWoxxAjLuQaqNdNA8wSbFKicPirjA"
         }
-        basic.load-balancing-policy {
-        local-datacenter = "dc1"
-        slow-replica-avoidance = false
+            basic.load-balancing-policy {
+            local-datacenter = "dc1"
+            slow-replica-avoidance = false
         }
-        advanced.connection.pool.local.size = 16
+            advanced.connection.pool.local.size = 16
         }
     keyspaces-application.conf: |-
         datastax-java-driver {

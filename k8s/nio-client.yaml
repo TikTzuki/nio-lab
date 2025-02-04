@@ -13,11 +13,14 @@ data:
     grpc:
       client:
         bank-account-service:
-          address: static://10.233.90.5:9090
-          negotiation-type: plaintext
+            address: static://nio-server.nio-lab:9090
+            negotiation-type: plaintext
     logging:
       level:
-        web: debug
+          web: off
+          io.grpc: error
+          reactor.netty: off
+          org.nio: info
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -39,7 +42,7 @@ spec:
     spec:
       containers:
         - name: nio-client
-          image: tiktuzki/nio-client:latest
+          image: tiktuzki/nio-client:k8s
           imagePullPolicy: Always
           #          resources:
           #            limits:
