@@ -7,7 +7,7 @@ spring:
 grpc:
   client:
     bank-account-service:
-      address: static://127.0.0.1:9090
+      address: static://127.0.0.1:9090,127.0.0.1:9091
       negotiation-type: plaintext
 server:
   port: 8080

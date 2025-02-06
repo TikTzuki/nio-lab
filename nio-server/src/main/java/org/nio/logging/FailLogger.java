@@ -12,21 +12,21 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 
 public class FailLogger extends Filter<ILoggingEvent> {
-    public static final Logger failLogger = LoggerFactory.getLogger("FailLogger");
-    static ObjectMapper objectMapper = new ObjectMapper();
+  public static final Logger failLogger = LoggerFactory.getLogger("FailLogger");
+  static ObjectMapper objectMapper = new ObjectMapper();
 
-    public static void appendFail(FailedTransaction tran) {
-        try {
-            failLogger.error(objectMapper.writeValueAsString(tran));
-        } catch (JsonProcessingException e) {
-            failLogger.error(tran.toString());
-        }
+  public static void appendFail(FailedTransaction tran) {
+    try {
+      failLogger.error(objectMapper.writeValueAsString(tran));
+    } catch (JsonProcessingException e) {
+      failLogger.error(tran.toString());
     }
+  }
 
-    @Override
-    public FilterReply decide(ILoggingEvent iLoggingEvent) {
-        if (Objects.equals(iLoggingEvent.getLoggerName(), failLogger.getName()))
-            return FilterReply.NEUTRAL;
-        return FilterReply.DENY;
-    }
+  @Override
+  public FilterReply decide(ILoggingEvent iLoggingEvent) {
+    if (Objects.equals(iLoggingEvent.getLoggerName(), failLogger.getName()))
+      return FilterReply.NEUTRAL;
+    return FilterReply.DENY;
+  }
 }

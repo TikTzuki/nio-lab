@@ -15,23 +15,23 @@ import java.util.Objects;
 @Configuration
 @RequiredArgsConstructor
 public class QueueConfig implements InitializingBean {
-    public static String QUEUE_URL = "";
-    final QueueConfigProperties properties;
+  public static String QUEUE_URL = "";
+  final QueueConfigProperties properties;
 
-    @Override
-    public void afterPropertiesSet() {
-        QUEUE_URL = properties.getUrl();
-    }
+  @Override
+  public void afterPropertiesSet() {
+    QUEUE_URL = properties.getUrl();
+  }
 
-    @Bean
-    public SqsAsyncClient sqsClient() throws URISyntaxException {
-        var builder = SqsAsyncClient.builder()
-            .region(properties.getRegion())
-            .credentialsProvider(ProfileCredentialsProvider.create());
-        if (Objects.nonNull(properties.getUrlEndpoint())) {
-            builder.endpointOverride(properties.getUrlEndpoint().toURI());
-        }
-        return builder.build();
+  @Bean
+  public SqsAsyncClient sqsClient() throws URISyntaxException {
+    var builder = SqsAsyncClient.builder()
+      .region(properties.getRegion())
+      .credentialsProvider(ProfileCredentialsProvider.create());
+    if (Objects.nonNull(properties.getUrlEndpoint())) {
+      builder.endpointOverride(properties.getUrlEndpoint().toURI());
     }
+    return builder.build();
+  }
 
 }

@@ -35,7 +35,7 @@ class TestController @Autowired constructor(
                 state
             }
         })
-        return stub.ping(f).map { it.value };
+        return stub.ping(f).map { it.value }
     }
 
     @PostMapping("/bulk-insert-accounts")
@@ -66,7 +66,6 @@ class TestController @Autowired constructor(
 
     @PostMapping("/bulk-transfers", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun bulkTransfers(
-        @RequestParam(defaultValue = "1") parallel: Int,
         @RequestParam(required = false) userCount: Long?,
         @RequestParam(defaultValue = "1") transactionPerUser: Int,
         @RequestParam(defaultValue = "true") enableStream: Boolean,
@@ -80,7 +79,7 @@ class TestController @Autowired constructor(
                         reader.readLines().stream().limit(userCount ?: Long.MAX_VALUE).toList()
                     }
             }.block()!!
-        workerService.startRun(accountIds, parallel, transactionPerUser, enableStream)
+        workerService.startRun(accountIds, transactionPerUser, enableStream)
         return "Bulk Transfer!"
     }
 

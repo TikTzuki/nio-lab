@@ -34,72 +34,72 @@ import static org.mockito.quality.Strictness.LENIENT;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = LENIENT)
 public class TransactionWorkerTest {
-    @Mock
-    SqsAsyncClient client;
-    @Mock
-    TransactionConfig config;
-    @Mock
-    TransactionRepository transactionRepository;
-    @Mock
-    AccountRepository accountRepository;
-    TransactionBufferQueue queue;
-    TransactionWorker worker;
-    TransactionServiceImpl transactionService;
+  @Mock
+  SqsAsyncClient client;
+  @Mock
+  TransactionConfig config;
+  @Mock
+  TransactionRepository transactionRepository;
+  @Mock
+  AccountRepository accountRepository;
+  TransactionBufferQueue queue;
+  TransactionWorker worker;
+  TransactionServiceImpl transactionService;
 
-    @BeforeEach
-    void setup() {
-        transactionService = new TransactionServiceImpl(transactionRepository, accountRepository, null);
-        queue = new TransactionBufferQueue(client, config);
-        worker = new TransactionWorker(transactionService, queue);
-    }
+  @BeforeEach
+  void setup() {
+    transactionService = new TransactionServiceImpl(transactionRepository, accountRepository, null);
+    queue = new TransactionBufferQueue(client, config);
+    worker = new TransactionWorker(transactionService, queue);
+  }
 
-    @Test
-    void testRun() throws InterruptedException {
-        // given
-        given(config.getReceiveMessageWaitTime()).willReturn(Duration.ofSeconds(20));
-        given(config.getNumberOfMessages()).willReturn(10);
-        var allMessages = TestTransactionUtils.generateMessages(List.of("u1", "u2", "u3", "u4"), 5);
-        given(client.receiveMessage(any(ReceiveMessageRequest.class)))
-            .willAnswer(it -> {
-                var messages = Stream.generate(allMessages::poll)
-                    .limit(10)
-                    .filter(Objects::nonNull)
-                    .toList();
-                ReceiveMessageResponse response = ReceiveMessageResponse.builder()
-                    .messages(messages.isEmpty() ? null : messages)
-                    .build();
-                return completedFuture(response);
-            });
-        given(accountRepository.getAccountBalance(anyString()))
-            .willReturn(Mono.just(new AccountBalance(BigDecimal.valueOf(100), 0L)));
-        given(accountRepository.updateBalance(
-            anyString(),
-            any(BigDecimal.class),
-            anyLong(),
-            anyLong()))
-            .willReturn(Mono.just(true));
-        given(transactionRepository.insertBatch(any()))
-            .willAnswer(it -> {
-                    var tran = it.getArgument(0, Transaction.class);
-                    Thread.sleep(new Random().nextInt(0, 300));
-                    return Mono.just(List.of(new NewTransaction(tran.getId(), tran.getRefId())));
-                }
-            );
-        CountDownLatch latch = new CountDownLatch(1);
-        // when
-        worker.run()
-            .map(it -> {
-                System.out.println(it);
-                return it;
-            })
-            .doOnComplete(latch::countDown)
-            .subscribe(message -> {
-                var hash = message.messageAttributes().get(QueuePublisherKt.HASH_RING_INDEX).stringValue();
-                var logContent = "%s [%s]: %s - %s".formatted(LocalTime.now(), Thread.currentThread().getName(), message.body(), hash);
-                System.out.println(logContent);
-            });
+  @Test
+  void testRun() throws InterruptedException {
+    // given
+    given(config.getReceiveMessageWaitTime()).willReturn(Duration.ofSeconds(20));
+    given(config.getNumberOfMessages()).willReturn(10);
+    var allMessages = TestTransactionUtils.generateMessages(List.of("u1", "u2", "u3", "u4"), 5);
+    given(client.receiveMessage(any(ReceiveMessageRequest.class)))
+      .willAnswer(it -> {
+        var messages = Stream.generate(allMessages::poll)
+          .limit(10)
+          .filter(Objects::nonNull)
+          .toList();
+        ReceiveMessageResponse response = ReceiveMessageResponse.builder()
+          .messages(messages.isEmpty() ? null : messages)
+          .build();
+        return completedFuture(response);
+      });
+    given(accountRepository.getAccountBalance(anyString()))
+      .willReturn(Mono.just(new AccountBalance(BigDecimal.valueOf(100), 0L)));
+    given(accountRepository.updateBalance(
+      anyString(),
+      any(BigDecimal.class),
+      anyLong(),
+      anyLong()))
+      .willReturn(Mono.just(true));
+    given(transactionRepository.insertBatch(any()))
+      .willAnswer(it -> {
+          var tran = it.getArgument(0, Transaction.class);
+          Thread.sleep(new Random().nextInt(0, 300));
+          return Mono.just(List.of(new NewTransaction(tran.getId(), tran.getRefId())));
+        }
+      );
+    CountDownLatch latch = new CountDownLatch(1);
+    // when
+    worker.run()
+      .map(it -> {
+        System.out.println(it);
+        return it;
+      })
+      .doOnComplete(latch::countDown)
+      .subscribe(message -> {
+        var hash = message.messageAttributes().get(QueuePublisherKt.HASH_RING_INDEX).stringValue();
+        var logContent = "%s [%s]: %s - %s".formatted(LocalTime.now(), Thread.currentThread().getName(), message.body(), hash);
+        System.out.println(logContent);
+      });
 
-        latch.await(5, TimeUnit.SECONDS);
-    }
+    latch.await(5, TimeUnit.SECONDS);
+  }
 
 }

@@ -11,13 +11,13 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class AccountCustomRepositoryImpl implements AccountCustomRepository<Account, String> {
-    final ReactiveCassandraTemplate template;
+  final ReactiveCassandraTemplate template;
 
-    @Override
-    public Mono<String> insertLite(Account i) {
-        var statement = template.getStatementFactory().insert(i, WriteOptions.builder()
-            .build()).build();
-        return template.execute(statement)
-            .mapNotNull(r -> i.getId());
-    }
+  @Override
+  public Mono<String> insertLite(Account i) {
+    var statement = template.getStatementFactory().insert(i, WriteOptions.builder()
+      .build()).build();
+    return template.execute(statement)
+      .mapNotNull(r -> i.getId());
+  }
 }

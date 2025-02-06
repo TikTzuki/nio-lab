@@ -8,9 +8,9 @@ import java.time.Duration;
 @Data
 @ConfigurationProperties(prefix = "transaction")
 public class TransactionConfig {
-    Duration receiveMessageWaitTime;
-    int numberOfMessages;
-    int bufferSize;
-    Duration bufferTime;
-    int hashRingSize;
+  Duration receiveMessageWaitTime;
+  int numberOfMessages;
+  int bufferSize;
+  Duration bufferTime;
+  int hashRingSize;
 }

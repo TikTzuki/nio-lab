@@ -12,22 +12,22 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 
 public class DeadLetterLogger extends Filter<ILoggingEvent> {
-    public static final Logger deadLetterLogger = LoggerFactory.getLogger("DeadLetterLogger");
-    static ObjectMapper objectMapper = new ObjectMapper();
+  public static final Logger deadLetterLogger = LoggerFactory.getLogger("DeadLetterLogger");
+  static ObjectMapper objectMapper = new ObjectMapper();
 
-    public static void appendDeadLetter(FailedTransaction tran) {
-        try {
-            deadLetterLogger.error(objectMapper.writeValueAsString(tran));
-        } catch (JsonProcessingException e) {
-            deadLetterLogger.error(tran.toString());
-        }
+  public static void appendDeadLetter(FailedTransaction tran) {
+    try {
+      deadLetterLogger.error(objectMapper.writeValueAsString(tran));
+    } catch (JsonProcessingException e) {
+      deadLetterLogger.error(tran.toString());
     }
+  }
 
-    @Override
-    public FilterReply decide(ILoggingEvent iLoggingEvent) {
-        if (Objects.equals(iLoggingEvent.getLoggerName(), deadLetterLogger.getName()))
-            return FilterReply.NEUTRAL;
-        return FilterReply.DENY;
-    }
+  @Override
+  public FilterReply decide(ILoggingEvent iLoggingEvent) {
+    if (Objects.equals(iLoggingEvent.getLoggerName(), deadLetterLogger.getName()))
+      return FilterReply.NEUTRAL;
+    return FilterReply.DENY;
+  }
 
 }

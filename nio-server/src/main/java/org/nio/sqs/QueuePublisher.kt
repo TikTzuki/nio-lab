@@ -19,26 +19,52 @@ const val TRACE_ID = "traceId"
 const val SPAN_ID = "spanId"
 const val HASH_RING_INDEX = "hashRingIndex"
 
+interface QueuePublisher {
+    fun publish(transactions: List<TransferRequest>): Mono<SendMessageBatchResponse>
 
-@Component
-class QueuePublisher @Autowired constructor(
-    private val client: SqsAsyncClient,
-    private val transactionConfig: TransactionConfig
-) {
     companion object {
         @JvmStatic
         fun hashRingIndex(message: Message): Int? {
             return message.messageAttributes()[HASH_RING_INDEX]?.stringValue()?.toInt()
         }
-
     }
+}
+
+@Component
+class QueuePublisherMockImpl : QueuePublisher {
+    override fun publish(transactions: List<TransferRequest>): Mono<SendMessageBatchResponse> {
+        val startBatch = System.currentTimeMillis()
+        return Mono.just(
+            SendMessageBatchResponse.builder()
+                .successful(
+                    transactions.map {
+                        SendMessageBatchResultEntry.builder()
+                            .id(it.referenceId)
+                            .build()
+                    })
+                .build()
+        )
+            .doOnNext {
+                logger.debug(
+                    "Published batch: {} - take {} ms",
+                    transactions.size,
+                    System.currentTimeMillis() - startBatch,
+                )
+            }
+    }
+}
+
+//@Component
+class QueuePublisherImpl @Autowired constructor(
+    private val client: SqsAsyncClient,
+    private val transactionConfig: TransactionConfig
+) : QueuePublisher {
 
     fun getRingIndex(userId: String): Int {
         return abs(userId.hashCode()) % transactionConfig.hashRingSize
     }
 
-
-    fun publish(transactions: List<TransferRequest>): Mono<SendMessageBatchResponse> {
+    override fun publish(transactions: List<TransferRequest>): Mono<SendMessageBatchResponse> {
         val startBatch = System.currentTimeMillis()
         val entries = transactions.map { transaction ->
             val transactionContent = MessageAttributeValue.builder()

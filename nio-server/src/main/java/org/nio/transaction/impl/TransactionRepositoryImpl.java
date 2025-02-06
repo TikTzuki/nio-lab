@@ -17,22 +17,22 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class TransactionRepositoryImpl implements TransactionCustomRepository {
-    final ReactiveCassandraTemplate template;
-    final ReactiveSessionFactory factory;
+  final ReactiveCassandraTemplate template;
+  final ReactiveSessionFactory factory;
 
-    @Override
-    public Mono<NewTransaction> insertBatch(Transaction transaction) {
-        return factory.getSession().flatMap(session -> {
-            SimpleStatement transactionStatement = template.getStatementFactory()
-                .insert(transaction, WriteOptions.builder()
-                    .build()).build();
-            SimpleStatement transactionByUserStatement = template.getStatementFactory()
-                .insert(new TransactionByAccount(transaction.getAccountId(), transaction.getId(), transaction.getTimeStamp()), WriteOptions.builder()
-                    .build()).build();
+  @Override
+  public Mono<NewTransaction> insertBatch(Transaction transaction) {
+    return factory.getSession().flatMap(session -> {
+      SimpleStatement transactionStatement = template.getStatementFactory()
+        .insert(transaction, WriteOptions.builder()
+          .build()).build();
+      SimpleStatement transactionByUserStatement = template.getStatementFactory()
+        .insert(new TransactionByAccount(transaction.getAccountId(), transaction.getId(), transaction.getTimeStamp()), WriteOptions.builder()
+          .build()).build();
 
-            BatchStatement statements = BatchStatement.newInstance(BatchType.UNLOGGED, transactionStatement, transactionByUserStatement); // Keyspace not support LoggedBatch
-            return session.execute(statements)
-                .map(r -> new NewTransaction(transaction.getId(), transaction.getRefId()));
-        });
-    }
+      BatchStatement statements = BatchStatement.newInstance(BatchType.UNLOGGED, transactionStatement, transactionByUserStatement); // Keyspace not support LoggedBatch
+      return session.execute(statements)
+        .map(r -> new NewTransaction(transaction.getId(), transaction.getRefId()));
+    });
+  }
 }

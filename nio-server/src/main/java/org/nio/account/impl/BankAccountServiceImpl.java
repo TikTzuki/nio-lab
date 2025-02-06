@@ -13,10 +13,10 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class BankAccountServiceImpl implements AccountService {
-    final AccountRepository repository;
+  final AccountRepository repository;
 
-    @Override
-    public Mono<String> createAccount(Account bankAccount) {
-        return repository.insertLite(bankAccount);
-    }
+  @Override
+  public Mono<String> createAccount(Account bankAccount) {
+    return repository.insertLite(bankAccount);
+  }
 }

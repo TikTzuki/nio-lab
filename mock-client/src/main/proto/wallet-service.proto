@@ -7,152 +7,152 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 service WalletService {
-    rpc ping (stream google.protobuf.Empty) returns (stream google.protobuf.StringValue);
-    rpc createAccount (CreateAccountRequest) returns (CreateAccountResponse);
-    rpc getAccountById (GetAccountByIdRequest) returns (GetAccountByIdResponse);
-    rpc deposit (DepositRequest) returns (DepositResponse);
-    rpc withdraw (WithdrawRequest) returns (WithdrawResponse);
+  rpc ping (stream google.protobuf.Empty) returns (stream google.protobuf.StringValue);
+  rpc createAccount (CreateAccountRequest) returns (CreateAccountResponse);
+  rpc getAccountById (GetAccountByIdRequest) returns (GetAccountByIdResponse);
+  rpc deposit (DepositRequest) returns (DepositResponse);
+  rpc withdraw (WithdrawRequest) returns (WithdrawResponse);
 
-    rpc transfer (TransferRequest) returns (TransferResponse);
-    rpc transferStream (stream TransferRequest) returns (stream TransferResponse);
-    rpc subscribeTransfer (SubscribeTransferRequest) returns (stream TransferResponse);
-    rpc closeTicket (CloseTicketRequest) returns (CloseTicketResponse);
+  rpc transfer (TransferRequest) returns (TransferResponse);
+  rpc transferStream (stream TransferRequest) returns (stream TransferResponse);
+  rpc subscribeTransfer (SubscribeTransferRequest) returns (stream TransferResponse);
+  rpc closeTicket (CloseTicketRequest) returns (CloseTicketResponse);
 
-    //  rpc getAllByBalance (GetAllByBalanceRequest) returns (stream GetAllByBalanceResponse);
-    //  rpc getAllByBalanceWithPagination(GetAllByBalanceWithPaginationRequest) returns (GetAllByBalanceWithPaginationResponse);
+  //  rpc getAllByBalance (GetAllByBalanceRequest) returns (stream GetAllByBalanceResponse);
+  //  rpc getAllByBalanceWithPagination(GetAllByBalanceWithPaginationRequest) returns (GetAllByBalanceWithPaginationResponse);
 }
 
 message TransferRequest {
-    // main props
-    string traceId = 1;
-    string spanId = 2;
-    string userId = 3;
-    string userAgent = 4;
-    string ticketId = 5;
-    string amount = 6;
+  // main props
+  string traceId = 1;
+  string spanId = 2;
+  string userId = 3;
+  string userAgent = 4;
+  string ticketId = 5;
+  string amount = 6;
 
-    // support props
-    string referenceId = 7;
-    string gameId = 8;
-    string gameName = 9;
-    string gameRoundId = 10;
+  // support props
+  string referenceId = 7;
+  string gameId = 8;
+  string gameName = 9;
+  string gameRoundId = 10;
 }
 
 message ErrorDetail {
-    ErrorCode code = 1;
-    string message = 2;
+  ErrorCode code = 1;
+  string message = 2;
 }
 
 enum ErrorCode {
-    INSUFFICIENT_BALANCE = 0;
-    INSERT_TRANSACTION_FAILED = 1;
+  INSUFFICIENT_BALANCE = 0;
+  INSERT_TRANSACTION_FAILED = 1;
 }
 
 message TransferResponse {
-    int32 code = 1;
-    string traceId = 2;
-    string spanId = 3;
-    string referenceId = 4;
+  int32 code = 1;
+  string traceId = 2;
+  string spanId = 3;
+  string referenceId = 4;
 }
 
 message SubscribeTransferRequest {
-    repeated string userId = 1;
+  repeated string userId = 1;
 }
 
 enum CloseTicketStatus{
-    DRAW = 0;
-    WIN = 1;
-    LOSE = 2;
-    CANCEL = 3;
+  DRAW = 0;
+  WIN = 1;
+  LOSE = 2;
+  CANCEL = 3;
 }
 
 message CloseTicketRequest {
-    string ticketId = 1;
-    CloseTicketStatus status = 2;
+  string ticketId = 1;
+  CloseTicketStatus status = 2;
 }
 
 message CloseTicketResponse {
-    string ticketId = 1;
-    CloseTicketStatus status = 2;
+  string ticketId = 1;
+  CloseTicketStatus status = 2;
 }
 
 message AccountData {
-    string id = 1;
-    string firstName = 2;
-    string lastName = 3;
-    string email = 4;
-    string address = 5;
-    string currency = 6;
-    string phone = 7;
-    string balance = 8;
-    string createdAt = 9;
-    string updatedAt = 10;
+  string id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string address = 5;
+  string currency = 6;
+  string phone = 7;
+  string balance = 8;
+  string createdAt = 9;
+  string updatedAt = 10;
 }
 
 message CreateAccountRequest {
-    string email = 1;
-    string firstName = 2;
-    string lastName = 3;
-    string address = 4;
-    string currency = 5;
-    string phone = 6;
-    string balance = 7;
+  string email = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string address = 4;
+  string currency = 5;
+  string phone = 6;
+  string balance = 7;
 }
 
 message CreateAccountResponse {
-    string accountId = 1;
+  string accountId = 1;
 }
 
 message GetAccountByIdRequest {
-    string id = 1;
+  string id = 1;
 }
 
 message GetAccountByIdResponse {
-    AccountData account = 1;
+  AccountData account = 1;
 }
 
 message DepositRequest {
-    string id = 1;
-    string balance = 2;
+  string id = 1;
+  string balance = 2;
 }
 
 message DepositResponse {
-    AccountData account = 1;
+  AccountData account = 1;
 }
 
 message WithdrawRequest {
-    string id = 1;
-    double balance = 2;
+  string id = 1;
+  double balance = 2;
 }
 
 message WithdrawResponse {
-    AccountData account = 1;
+  AccountData account = 1;
 }
 
 message GetAllByBalanceRequest {
-    double min = 1;
-    double max = 2;
-    int32 page = 3;
-    int32 size = 4;
+  double min = 1;
+  double max = 2;
+  int32 page = 3;
+  int32 size = 4;
 }
 
 message GetAllByBalanceResponse {
-    AccountData account = 1;
+  AccountData account = 1;
 }
 
 message GetAllByBalanceWithPaginationRequest {
-    double min = 1;
-    double max = 2;
-    int32 page = 3;
-    int32 size = 4;
+  double min = 1;
+  double max = 2;
+  int32 page = 3;
+  int32 size = 4;
 }
 
 message GetAllByBalanceWithPaginationResponse {
-    repeated AccountData account = 1;
-    int32 page = 2;
-    int32 size = 3;
-    int32 totalElements = 4;
-    int32 totalPages = 5;
-    bool isFirst = 6;
-    bool isLast = 7;
+  repeated AccountData account = 1;
+  int32 page = 2;
+  int32 size = 3;
+  int32 totalElements = 4;
+  int32 totalPages = 5;
+  bool isFirst = 6;
+  bool isLast = 7;
 }

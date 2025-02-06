@@ -22,48 +22,48 @@ import java.util.function.BiFunction;
 @RequiredArgsConstructor
 @Component
 public class TransactionBufferQueue {
-    final SqsAsyncClient sqsClient;
-    final TransactionConfig transactionConfig;
+  final SqsAsyncClient sqsClient;
+  final TransactionConfig transactionConfig;
 
-    public Flux<GroupedFlux<Long, Message>> pollMessageFlux() {
-        ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
-            .queueUrl(QueueConfig.QUEUE_URL)
-            .messageAttributeNames(QueuePublisherKt.MESSAGE_CONTENT, QueuePublisherKt.TRACE_ID, QueuePublisherKt.SPAN_ID, QueuePublisherKt.HASH_RING_INDEX)
-            .waitTimeSeconds((int) transactionConfig.getReceiveMessageWaitTime().toSeconds())
-            .maxNumberOfMessages(transactionConfig.getNumberOfMessages())
-            .build();
+  public Flux<GroupedFlux<Long, Message>> pollMessageFlux() {
+    ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
+      .queueUrl(QueueConfig.QUEUE_URL)
+      .messageAttributeNames(QueuePublisherKt.MESSAGE_CONTENT, QueuePublisherKt.TRACE_ID, QueuePublisherKt.SPAN_ID, QueuePublisherKt.HASH_RING_INDEX)
+      .waitTimeSeconds((int) transactionConfig.getReceiveMessageWaitTime().toSeconds())
+      .maxNumberOfMessages(transactionConfig.getNumberOfMessages())
+      .build();
 
-        Callable<Long> initState = () -> 0L;
-        BiFunction<Long, SynchronousSink<Long>, Long> infinityMessageGenerator = (i, sink) -> {
-            sink.next(i);
-            return i;
-        };
-        AtomicLong count = new AtomicLong();
-        AtomicLong start = new AtomicLong(System.currentTimeMillis());
-        return Flux.generate(initState, infinityMessageGenerator)
+    Callable<Long> initState = () -> 0L;
+    BiFunction<Long, SynchronousSink<Long>, Long> infinityMessageGenerator = (i, sink) -> {
+      sink.next(i);
+      return i;
+    };
+    AtomicLong count = new AtomicLong();
+    AtomicLong start = new AtomicLong(System.currentTimeMillis());
+    return Flux.generate(initState, infinityMessageGenerator)
 //            .delayElements(Duration.ofSeconds(30))
-            .concatMap(i -> Mono.fromFuture(sqsClient.receiveMessage(receiveMessageRequest)))
-            .flatMap(sqsMessages -> {
-                if (sqsMessages.hasMessages()) {
-                    var messages = sqsMessages.messages();
+      .concatMap(i -> Mono.fromFuture(sqsClient.receiveMessage(receiveMessageRequest)))
+      .flatMap(sqsMessages -> {
+        if (sqsMessages.hasMessages()) {
+          var messages = sqsMessages.messages();
 
-                    // debug
-                    count.getAndAdd(messages.size());
-                    if (count.get() >= 1_000) {
-                        var now = System.currentTimeMillis();
-                        log.info("Receive then delete {} messages in {} ms", count.get(), now - start.get());
-                        start.set(now);
-                        count.set(0);
-                    }
-                    return Flux.fromIterable(messages);
-                }
-                return Flux.empty();
-            })
-            .groupBy(message ->
-                Long.valueOf(message.messageAttributes()
-                    .get(QueuePublisherKt.HASH_RING_INDEX)
-                    .stringValue()));
-    }
+          // debug
+          count.getAndAdd(messages.size());
+          if (count.get() >= 1_000) {
+            var now = System.currentTimeMillis();
+            log.info("Receive then delete {} messages in {} ms", count.get(), now - start.get());
+            start.set(now);
+            count.set(0);
+          }
+          return Flux.fromIterable(messages);
+        }
+        return Flux.empty();
+      })
+      .groupBy(message ->
+        Long.valueOf(message.messageAttributes()
+          .get(QueuePublisherKt.HASH_RING_INDEX)
+          .stringValue()));
+  }
 
 
 }

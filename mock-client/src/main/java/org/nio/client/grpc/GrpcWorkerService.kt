@@ -10,6 +10,7 @@ import net.devh.boot.grpc.client.inject.GrpcClient
 import org.nio.client.utils.genReferenceId
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import reactor.core.Disposable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
@@ -27,19 +28,56 @@ class GrpcWorkerService @Autowired constructor(
     val stub: ReactorWalletServiceStub
 ) {
     var executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    var flux: Flux<Any> = Flux.empty()
+    var runningFlux: Disposable? = null
 
     fun startRun(
         accountIds: List<String>,
-        parallel: Int,
         transPerUser: Int,
         enableStream: Boolean
     ) {
-        if (!executorService.isShutdown)
-            stopRun()
-        executorService = Executors.newSingleThreadScheduledExecutor()
-        executorService.scheduleAtFixedRate({
-            transferStream(accountIds, parallel, transPerUser)
-        }, 0, 1, TimeUnit.SECONDS)
+        /*
+                if (!executorService.isShutdown)
+                    stopRun()
+                executorService = Executors.newSingleThreadScheduledExecutor()
+                executorService.scheduleAtFixedRate({
+                    transferStream(accountIds, parallel, transPerUser)
+                }, 0, 1, TimeUnit.SECONDS)
+        */
+        runningFlux?.let {
+            if (!it.isDisposed) {
+                it.dispose()
+            }
+        }
+        transferStreamMock(accountIds, transPerUser)
+
+//         val initialState: Callable<Long> = Callable {
+//             0L
+//         }
+//        val infinityGenerator : BiFunction<Long, SynchronousSink<Long>, Long> = BiFunction { i, sink ->
+//            sink.next(i)
+//            i
+//        }
+//        runningFlux = Flux.generate(initialState, infinityGenerator)
+//            .subscribe();
+    }
+
+    fun transferStreamMock(
+        accountIds: List<String>,
+        transPerUser: Int
+    ) {
+        val l = mutableListOf<TransferRequest>()
+        for (i in 0 until Runtime.getRuntime().availableProcessors()) {
+            val r = TransferRequest.newBuilder()
+                .setReferenceId("ref-$i")
+                .build()
+//            val requests = Flux.just(r)
+            l.add(r)
+//            val responseFlux = stub.transferStream(requests)
+//            val responses = responseFlux.blockLast()
+        }
+        val responses = stub.transferStream(Flux.fromIterable(l)).blockLast()
+        logger.info { "Response: $responses" }
     }
 
     fun transferStream(
@@ -53,7 +91,7 @@ class GrpcWorkerService @Autowired constructor(
         accountIds.toFlux()
             .bufferTimeout(ceil(accountIds.size / parallel.toDouble()).toInt(), Duration.ofMillis(1))
             .parallel(parallel)
-            .runOn(Schedulers.parallel())
+            .runOn(Schedulers.newParallel("transfer-worker", parallel))
             .flatMap { userAccountIds ->
                 stub.transferStream(accountIdsToTransferRequest(userAccountIds, transPerUser))
                     .doOnNext { response ->
@@ -95,6 +133,7 @@ class GrpcWorkerService @Autowired constructor(
     }
 
     fun stopRun() {
+        runningFlux?.dispose()
         executorService.shutdown()
         executorService.awaitTermination(1, TimeUnit.MINUTES)
     }
