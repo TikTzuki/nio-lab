@@ -43,7 +43,7 @@ public class TransactionServiceImpl {
           log.error(e.getMessage(), e);
           return Flux.fromIterable(batch).map(TransactionMappersKt::genericFail);
         }))
-      .doOnComplete(() -> log.debug("Published batch: {} ms", System.currentTimeMillis() - start));
+      .doOnComplete(() -> log.debug("Complete prepare transfer flux {} ms", System.currentTimeMillis() - start));
   }
 
   public Mono<NewTransaction> persistTransaction(TransferRequest request) {

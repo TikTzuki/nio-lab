@@ -4,8 +4,7 @@
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>
-                %cyan(%d{yy-MM-dd HH:mm:ss.SSS}) [%green(%t)] %highlight(%-5level) %yellow(%C{36}) %line:
-                %msg%n%throwable
+                %cyan(%d{yy-MM-dd HH:mm:ss.SSS}) [%green(%t)] %highlight(%-5level) %yellow(%C{36}) %line: %msg%n%throwable
             </Pattern>
         </layout>
     </appender>
@@ -15,8 +14,7 @@
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_PATH}/%d{yyyy-MM-dd-HH}.%i.log</fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy
-                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFileNamingAndTriggeringPolicy">
                 <maxFileSize>100MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
@@ -25,8 +23,7 @@
         <filter class="org.nio.logging.DeadLetterLogger"/>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>
-                {"timestamp": "%d{yyyy-MM-dd HH:mm:ss.SSS}","thread": "%thread","class": "%logger{40}","message":
-                "%msg"},\n
+                {"timestamp": "%d{yyyy-MM-dd HH:mm:ss.SSS}","thread": "%thread","class": "%logger{40}","message": "%msg"},\n
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -41,8 +38,7 @@
         <filter class="org.nio.logging.FailLogger"/>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>
-                {"timestamp": "%d{yyyy-MM-dd HH:mm:ss.SSS}","thread": "%thread","class": "%logger{40}","message":
-                "%msg"},\n
+                {"timestamp": "%d{yyyy-MM-dd HH:mm:ss.SSS}","thread": "%thread","class": "%logger{40}","message": "%msg"},\n
             </Pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">

@@ -14,12 +14,6 @@ allprojects {
         mavenCentral()
         maven { url 'https://repo.spring.io/snapshot' }
     }
-    dependencyManagement {
-        imports {
-            mavenBom "org.springframework.grpc:spring-grpc-dependencies:0.3.0-SNAPSHOT"
-            mavenBom "org.junit:junit-bom:5.10.0"
-        }
-    }
     kotlin {
         jvmToolchain(23)
         compilerOptions {
@@ -38,6 +32,13 @@ subprojects {
     apply plugin: "io.freefair.lombok"
     test {
         useJUnitPlatform()
+    }
+    dependencyManagement {
+        imports {
+//            mavenBom "org.springframework.grpc:spring-grpc-dependencies:0.3.0-SNAPSHOT"
+//            mavenBom "org.junit:junit-bom:5.10.0"
+        }
+        applyMavenExclusions = false
     }
 }
 

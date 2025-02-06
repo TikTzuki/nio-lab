@@ -34,23 +34,21 @@ interface QueuePublisher {
 class QueuePublisherMockImpl : QueuePublisher {
     override fun publish(transactions: List<TransferRequest>): Mono<SendMessageBatchResponse> {
         val startBatch = System.currentTimeMillis()
-        return Mono.just(
-            SendMessageBatchResponse.builder()
-                .successful(
-                    transactions.map {
-                        SendMessageBatchResultEntry.builder()
-                            .id(it.referenceId)
-                            .build()
-                    })
-                .build()
-        )
-            .doOnNext {
-                logger.debug(
-                    "Published batch: {} - take {} ms",
-                    transactions.size,
-                    System.currentTimeMillis() - startBatch,
-                )
-            }
+        val message = SendMessageBatchResponse.builder()
+            .successful(
+                transactions.map {
+                    SendMessageBatchResultEntry.builder()
+                        .id(it.referenceId)
+                        .build()
+                })
+            .build()
+        return Mono.just(message).doOnNext {
+            logger.debug(
+                "Published batch: {} - take {} ms",
+                transactions.size,
+                System.currentTimeMillis() - startBatch,
+            )
+        }
     }
 }
 
@@ -93,22 +91,18 @@ class QueuePublisherImpl @Autowired constructor(
                 .messageBody(transaction.referenceId)
                 .build()
         }
-        logger.debug(
-            "Prepare batch: {} - {}",
-            System.currentTimeMillis() - startBatch,
-            entries.size,
-        )
         val batchResponse = client.sendMessageBatch(
             SendMessageBatchRequest.builder()
                 .queueUrl(QueueConfig.QUEUE_URL)
                 .entries(entries)
                 .build()
         )
-        logger.debug(
-            "Published batch: {} - {}",
-            System.currentTimeMillis() - startBatch,
-            entries.size
-        )
-        return Mono.fromFuture(batchResponse)
+        return Mono.fromFuture(batchResponse).doOnNext {
+            logger.debug(
+                "Published batch: {} - {}",
+                System.currentTimeMillis() - startBatch,
+                entries.size
+            )
+        }
     }
 }

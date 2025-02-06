@@ -28,71 +28,38 @@ class GrpcWorkerService @Autowired constructor(
     val stub: ReactorWalletServiceStub
 ) {
     var executorService: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-    var flux: Flux<Any> = Flux.empty()
     var runningFlux: Disposable? = null
+    var flux: Flux<String>? = null
 
     fun startRun(
         accountIds: List<String>,
         transPerUser: Int,
         enableStream: Boolean
     ) {
-        /*
-                if (!executorService.isShutdown)
-                    stopRun()
-                executorService = Executors.newSingleThreadScheduledExecutor()
-                executorService.scheduleAtFixedRate({
-                    transferStream(accountIds, parallel, transPerUser)
-                }, 0, 1, TimeUnit.SECONDS)
-        */
-        runningFlux?.let {
-            if (!it.isDisposed) {
-                it.dispose()
-            }
-        }
-        transferStreamMock(accountIds, transPerUser)
-
-//         val initialState: Callable<Long> = Callable {
-//             0L
-//         }
-//        val infinityGenerator : BiFunction<Long, SynchronousSink<Long>, Long> = BiFunction { i, sink ->
-//            sink.next(i)
-//            i
-//        }
-//        runningFlux = Flux.generate(initialState, infinityGenerator)
-//            .subscribe();
-    }
-
-    fun transferStreamMock(
-        accountIds: List<String>,
-        transPerUser: Int
-    ) {
-        val l = mutableListOf<TransferRequest>()
-        for (i in 0 until Runtime.getRuntime().availableProcessors()) {
-            val r = TransferRequest.newBuilder()
-                .setReferenceId("ref-$i")
-                .build()
-//            val requests = Flux.just(r)
-            l.add(r)
-//            val responseFlux = stub.transferStream(requests)
-//            val responses = responseFlux.blockLast()
-        }
-        val responses = stub.transferStream(Flux.fromIterable(l)).blockLast()
-        logger.info { "Response: $responses" }
+        if (!executorService.isShutdown)
+            stopRun()
+        flux = accountIds.toFlux()
+        executorService = Executors.newSingleThreadScheduledExecutor()
+        executorService.scheduleAtFixedRate({
+            transferStream(flux!!, accountIds.size, Runtime.getRuntime().availableProcessors(), transPerUser)
+        }, 0, 5, TimeUnit.SECONDS)
     }
 
     fun transferStream(
-        accountIds: List<String>,
+        accountIds: Flux<String>,
+        size: Int,
         parallel: Int,
         transPerUser: Int
-    ) {
+    ): Disposable {
         val start = System.currentTimeMillis()
         var successCount = 0
         var failCount = 0
-        accountIds.toFlux()
-            .bufferTimeout(ceil(accountIds.size / parallel.toDouble()).toInt(), Duration.ofMillis(1))
+        return accountIds
+            .bufferTimeout(ceil(size / parallel.toDouble()).toInt(), Duration.ofMillis(1))
             .parallel(parallel)
-            .runOn(Schedulers.newParallel("transfer-worker", parallel))
+            .runOn(Schedulers.parallel())
             .flatMap { userAccountIds ->
+                logger.info { "Transfer ${userAccountIds.size} transactions " }
                 stub.transferStream(accountIdsToTransferRequest(userAccountIds, transPerUser))
                     .doOnNext { response ->
                         if (response.code == 0)
@@ -108,6 +75,7 @@ class GrpcWorkerService @Autowired constructor(
                             logger.error { "Unhandled error $err" }
                     }
             }
+//            .sequential()
             .doOnComplete { logger.info { "Transfer $successCount transaction, success ${successCount}, fail ${failCount}, taken: ${System.currentTimeMillis() - start} ms" } }
             .subscribe { }
     }
@@ -116,7 +84,7 @@ class GrpcWorkerService @Autowired constructor(
         return accountIds.toFlux()
             .flatMap { accountId ->
                 Mono.just(accountIds)
-                    .repeat(transPerUser.toLong())
+                    .repeat(transPerUser.toLong() - 1)
                     .map {
                         val refId = genReferenceId(accountId)
                         val traceId = "trace-$refId"

@@ -23,7 +23,7 @@ spring:
       enabled: true
 logging:
   level:
-    org.nio: debug
+    org.nio: info
     org.nio.transaction.org.nio.transaction.DeadLetterLogger: error
     ork.springframework.data.cassandra.core.cql.ReactiveCqlTemplate: ${LOG_CASSANDRA:error}
     io.grpc: error
